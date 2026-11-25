@@ -18,6 +18,5 @@ the Frozen Throne, the snapshot store. The full table is in the roadmap.
 
 ## Name
 
-The name and the codenames are a homage to Icecrown Citadel from World of Warcraft. World of Warcraft and
-Icecrown Citadel are trademarks of Blizzard Entertainment; this project is not affiliated with, sponsored
-or endorsed by Blizzard.
+Project Icecrown is an independent open source project, named after the legendary raid as an homage. It is
+not affiliated with or endorsed by Blizzard Entertainment, and it has nothing to do with World of Warcraft.
