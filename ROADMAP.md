@@ -8,8 +8,7 @@ Two marks show how firm a value is:
 - *proposed* — a default the owner accepted on 2026-11-25. A phase may bring it back to the owner with a
   reason; it never changes one on its own.
 - *revised* — changed or added by the independent review of 2026-11-25 (library engineering and technical
-  design). **Not yet confirmed by the owner.** A phase asks about its *revised* items at sign-off unless
-  the owner has confirmed them before.
+  design), and accepted by the owner the same day. It binds like a *proposed* default.
 
 ## What Project Icecrown is
 
@@ -92,7 +91,7 @@ Accepted as proposed (owner, 2026-11-25):
 - **Phase order.** Phases 0 to 7 in the order listed.
 - **Sign-off.** Each phase lists what the owner confirms before its code is written.
 
-*Revised* by the review (awaiting owner confirmation):
+*Revised* by the review, accepted (owner, 2026-11-25):
 
 - **Arrow is the core.** The only runtime dependency is `pyarrow`; the fingerprint is computed from Arrow
   data. pandas is an optional extra and one adapter among others, as is SQL (`sqlalchemy`). This replaces
@@ -134,11 +133,11 @@ is merged. Kick-off prompt: "Implement Phase N of `ROADMAP.md` following its Run
 
 1. **Read.** This file, then (from Phase 1 on) `CLAUDE.md` and the skill; from Phase 1 on, route each
    commit through the skill's workflow file.
-2. **Sign-off first.** A sign-off item with a *proposed* default is already accepted and is not asked
-   again. Present the remaining items — every *revised* item, those with no default, and the concrete
-   form of the accepted ones (signatures, file layouts with sample content, sample output) — to the owner
-   and wait for confirmation before writing code. Record each confirmed decision under the phase, dated,
-   in the phase's first commit, and drop its *revised* mark.
+2. **Sign-off first.** A sign-off item with a *proposed* or *revised* default is already accepted and is
+   not asked again. Present the remaining items — those with no default, and the concrete form of the
+   accepted ones (signatures, file layouts with sample content, sample output) — to the owner and wait
+   for confirmation before writing code. Record each confirmed decision under the phase, dated, in the
+   phase's first commit.
 3. **Implement.** One commit per table row, in order, each passing the verify command (from the commit
    of Phase 0 that creates it).
 4. **Review.** The `reviewer` agent reviews the whole phase diff before the pull request opens; its
@@ -212,7 +211,7 @@ Design the phase follows:
 - **Versioning.** Semantic; the version lives only in `pyproject.toml`; `CHANGELOG.md` is the one
   changelog, newest first, in the Keep a Changelog layout.
 
-Sign-off: the *revised* scope rules above; the prior-art comparison; the hard-rule set and the ask-first
+Sign-off: the prior-art comparison; the hard-rule set and the ask-first
 list; the agents' model and effort tiers and the session model named in `.claude/settings.json`; the
 `permissions` lists; the conventions the checker enforces mechanically; the exact CI matrix; the tools
 behind commits 1, 2, 10 and 12 (*revised* defaults: `hatchling`, `uv` with `uv.lock`, `ruff`, `mypy`
