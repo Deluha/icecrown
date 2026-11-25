@@ -46,9 +46,8 @@ Each system is named after Icecrown Citadel, and its entry points open with that
 | Valithria Dreamwalker | Healing: `thaw` a frozen copy back into a file or table | later |
 | Sindragosa | Cold storage: retention, compaction and a remote store | later |
 
-The name and the codenames are a homage to Icecrown Citadel from World of Warcraft. World of Warcraft and
-Icecrown Citadel are trademarks of Blizzard Entertainment; the project is not affiliated with, sponsored
-or endorsed by Blizzard, and ships no game asset.
+Project Icecrown is an independent open source project, named after the legendary raid as an homage. It is
+not affiliated with or endorsed by Blizzard Entertainment, and it has nothing to do with World of Warcraft.
 
 ## v0.1 — Frostmourne
 
