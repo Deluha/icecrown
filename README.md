@@ -16,5 +16,8 @@ the Frozen Throne, the snapshot store. The full table is in the roadmap.
 
 [MIT](LICENSE).
 
-World of Warcraft and Icecrown Citadel are trademarks of Blizzard Entertainment. The names are used as
-codenames only; this project is not affiliated with or endorsed by Blizzard.
+## Name
+
+The name and the codenames are a homage to Icecrown Citadel from World of Warcraft. World of Warcraft and
+Icecrown Citadel are trademarks of Blizzard Entertainment; this project is not affiliated with, sponsored
+or endorsed by Blizzard.

@@ -1,8 +1,9 @@
 # Project Icecrown — Roadmap
 
 The planned scope of the next release. `RELEASE_NOTES.md` records what shipped; this file records
-what is planned. A release's section leaves this file when the release is tagged. Owner decisions are dated;
-anything marked *proposed* is a default the owner has not confirmed yet.
+what is planned. A release's section leaves this file when the release is tagged. Owner decisions are dated.
+Every default marked *proposed* below was accepted by the owner on 2026-11-25; the mark is kept to show
+which values are defaults a phase may bring back to the owner with a reason, never change on its own.
 
 ## What Project Icecrown is
 
@@ -45,8 +46,9 @@ Each system is named after Icecrown Citadel, and its entry points open with that
 | Valithria Dreamwalker | Healing: `thaw` a frozen copy back into a file or table | later |
 | Sindragosa | Cold storage: retention, compaction and a remote store | later |
 
-World of Warcraft and Icecrown Citadel are trademarks of Blizzard Entertainment. The names are used as
-codenames only; the project is not affiliated with or endorsed by Blizzard, and ships no game asset.
+The name and the codenames are a homage to Icecrown Citadel from World of Warcraft. World of Warcraft and
+Icecrown Citadel are trademarks of Blizzard Entertainment; the project is not affiliated with, sponsored
+or endorsed by Blizzard, and ships no game asset.
 
 ## v0.1 — Frostmourne
 
@@ -63,7 +65,7 @@ Owner decisions (2026-11-25):
   writer / reader / reviewer agents, mechanical checkers, one verify command, phase-based delivery.
 - **This session decided scope only.** No code exists yet; Phase 0 starts the build.
 
-Proposed (confirmed or changed at Phase 0 sign-off):
+Accepted as proposed (owner, 2026-11-25):
 
 - **Offline and local.** The core makes no network call and needs no service. A database is reached only
   through a connection the user supplies.
@@ -101,9 +103,11 @@ is merged. Kick-off prompt: "Implement Phase N of `ROADMAP.md` following its Run
 
 1. **Read.** This file, then (from Phase 1 on) `CLAUDE.md` and the skill; route each commit through the
    skill's workflow file.
-2. **Sign-off first.** Present the phase's sign-off items to the owner as concrete proposals (signatures,
-   file layouts with sample content, thresholds, sample output) and wait for confirmation before writing
-   code. Record each confirmed decision under the phase, dated, in the phase's first commit.
+2. **Sign-off first.** A sign-off item with a *proposed* default is already accepted (owner, 2026-11-25) and
+   is not asked again. Present the remaining items — those with no default, and the concrete form of the
+   accepted ones (signatures, file layouts with sample content, sample output) — to the owner and wait for
+   confirmation before writing code. Record each confirmed decision under the phase, dated, in the phase's
+   first commit.
 3. **Implement.** One commit per table row, in order, each passing `python tools/verify.py` (from the
    commit of Phase 0 that creates it).
 4. **Review.** The `reviewer` agent reviews the whole phase diff before the pull request opens; its
