@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -32,6 +33,20 @@ def test_docs_sync_is_skipped_without_a_base_ref() -> None:
 
 
 def test_no_base_ref_outside_a_checkout(tmp_path: Path) -> None:
+    assert verify.base_ref(tmp_path) is None
+
+
+def test_no_base_ref_without_a_main_branch(tmp_path: Path) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(
+            ["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", *args],
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
+        )
+
+    git("init", "-q", "-b", "other")
+    git("commit", "-q", "--allow-empty", "-m", "start")
     assert verify.base_ref(tmp_path) is None
 
 

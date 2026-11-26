@@ -1,16 +1,15 @@
 """PostToolUse hook: lint a Python file right after Claude Code edits it.
 
 Reads the hook payload from stdin. For an edited ``.py`` file inside the project, it runs the
-locked ``ruff check`` on that file; on a finding it prints the report to stderr and exits 2, which
-Claude Code feeds back to the session. Any other file, a missing ``uv``, or a ruff that cannot run
-(an environment that is not synced yet) does not block.
+ruff installed from ``uv.lock`` in the project's ``.venv`` on that file; on a finding it prints the
+report to stderr and exits 2, which Claude Code feeds back to the session. Any other file, an
+environment that is not synced yet, or a ruff that cannot run does not block.
 """
 
 from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -35,25 +34,24 @@ def file_to_check(payload: str, project_dir: Path) -> Path | None:
     return path
 
 
+def locked_ruff(project_dir: Path) -> Path | None:
+    """Return the ruff installed from ``uv.lock`` in the project's ``.venv``, if there is one."""
+    for relative in (".venv/bin/ruff", ".venv/Scripts/ruff.exe"):
+        candidate = project_dir / relative
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def main() -> int:
     """Run the hook and return its exit code."""
     project_dir = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd())
     path = file_to_check(sys.stdin.read(), project_dir)
-    uv = shutil.which("uv")
-    if path is None or uv is None:
+    ruff = locked_ruff(project_dir)
+    if path is None or ruff is None:
         return 0
     result = subprocess.run(
-        [
-            uv,
-            "run",
-            "--frozen",
-            "--no-sync",
-            "ruff",
-            "check",
-            "--quiet",
-            "--force-exclude",
-            str(path),
-        ],
+        [str(ruff), "check", "--quiet", "--force-exclude", str(path)],
         capture_output=True,
         text=True,
         check=False,

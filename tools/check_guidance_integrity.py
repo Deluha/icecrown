@@ -39,6 +39,8 @@ ROLES_MIN_CELLS = 4  # role, agent, model, effort
 AGENT_KEYS = ("name", "description", "tools", "model", "effort")
 EVALS_FILE = "evals/evals.json"
 ASK_FIRST_PREFIX = "ask-first:"
+CONVENTIONS_FILE = f"{SKILL_DIR}/references/conventions.md"
+ASK_FIRST_HEADING = "Ask first"
 EXTERNAL = re.compile(r"^[a-z][a-z0-9+.-]*:", re.IGNORECASE)
 CODE = re.compile(r"`([^`]+)`")
 
@@ -269,6 +271,19 @@ def routed_references(root: Path) -> set[str]:
     return routed
 
 
+def ask_first_text(root: Path) -> str:
+    """Return the ask-first section of the conventions, lower-cased and without code marks."""
+    path = root / CONVENTIONS_FILE
+    if not path.is_file():
+        return ""
+    text = path.read_text(encoding="utf-8")
+    start = text.find(f"## {ASK_FIRST_HEADING}\n")
+    if start < 0:
+        return ""
+    end = text.find("\n## ", start + 1)
+    return text[start : end if end >= 0 else len(text)].replace("`", "").lower()
+
+
 def check_evals(root: Path) -> list[Violation]:
     """G7: the routing and ask-first evals parse and name a routed file or an ask-first item."""
     path = root / EVALS_FILE
@@ -282,6 +297,7 @@ def check_evals(root: Path) -> list[Violation]:
     if not isinstance(evals, list) or not evals:
         return [Violation(EVALS_FILE, 1, "G7", "expected a non-empty 'evals' list")]
     routed = routed_references(root)
+    ask_first = ask_first_text(root)
     found = []
     ids: set[str] = set()
     for index, item in enumerate(evals):
@@ -297,10 +313,14 @@ def check_evals(root: Path) -> list[Violation]:
         ids.add(item["id"])
         expect = item["expect"]
         if expect.startswith(ASK_FIRST_PREFIX):
-            if not expect.removeprefix(ASK_FIRST_PREFIX).strip():
+            item_name = expect.removeprefix(ASK_FIRST_PREFIX).split("(")[0].strip().lower()
+            if not item_name:
                 found.append(
                     Violation(EVALS_FILE, 1, "G7", f"{item['id']}: name the ask-first item")
                 )
+            elif item_name not in ask_first:
+                message = f"{item['id']}: {item_name!r} is not on the ask-first list"
+                found.append(Violation(EVALS_FILE, 1, "G7", message))
         elif expect not in routed:
             found.append(Violation(EVALS_FILE, 1, "G7", f"{item['id']}: unknown route {expect!r}"))
     return found

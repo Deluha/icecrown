@@ -15,7 +15,7 @@ Every test lives here (hard rule R4). The rules for writing them are in
 
 ```bash
 uv run pytest                          # the suite
-uv run python tools/verify.py          # the suite with coverage, plus every other gate
+uv run python tools/verify.py          # the suite with coverage, plus the checkers, lint and types
 HYPOTHESIS_PROFILE=ci uv run pytest    # the CI profile: derandomised, more examples
 ```
 

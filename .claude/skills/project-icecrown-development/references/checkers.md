@@ -15,8 +15,8 @@ only what `ruff` and `mypy` cannot express.
 | C3 | No network module imported anywhere in `src/`: `socket`, `ssl`, `http.client`, `http.server`, `urllib.request`, `ftplib`, `smtplib`, `requests`, `httpx`, `aiohttp`, `urllib3` | R5 |
 | C4 | Every top-level module or package of `icecrown` is private (`_*`) unless it is `__init__.py`, `__main__.py` or an entry point declared in `pyproject.toml`; every function in an entry-point module or package is at most 40 lines | R8 |
 | C5 | No `test_*.py`, `*_test.py` or `conftest.py` outside `tests/` (tracked and untracked files, ignored ones excluded) | R4 |
-| C6 | A module-level name ending in `_VERSION` (including tuple targets and assignments inside module-level `if`, `try` and `with` blocks) is assigned only in `_versions.py` | R1, R6 |
-| C7 | `icecrown/__init__.py` declares `__all__` as a literal list; every name in it is defined or imported there and has a docstring where it is defined. Sorting is ruff's RUF022 | R8 |
+| C6 | A module-level name ending in `_VERSION` (including tuple targets and assignments inside module-level `if`, `try` and `with` blocks; reading one, as in `TABLE[SPEC_VERSION] = …`, is fine) is assigned only in `_versions.py` | R1, R6 |
+| C7 | `icecrown/__init__.py` declares `__all__` as a literal list; every name in it is defined or imported there and has a docstring where it is defined (an imported module counts as documented here; its own docstring is its module's business). Sorting is ruff's RUF022 | R8 |
 
 The entry points come from `[project.scripts]` and `[project.entry-points.pytest11]`; the checker
 reads them from `pyproject.toml` rather than keeping its own list (R1).
@@ -33,8 +33,8 @@ every `.md` under `.claude/`.
 | G3 | The skill's `SKILL.md` routing table has exactly one row per file under `references/`; links that leave the skill (to `docs/`, say) are allowed and are not routes |
 | G4 | A rule in `.claude/rules/` has a `paths` list in its frontmatter and at most 6 non-blank body lines, each holding a link (pointer-only) |
 | G5 | A command skill (every skill but the development skill) has `name` and `description` and at most 6 non-blank body lines, each holding a link |
-| G6 | An agent in `.claude/agents/` declares `name`, `description`, `tools`, `model` and `effort`, and its `model` and `effort` match its row in [recipes.md](recipes.md#roles) |
-| G7 | `evals/evals.json` exists and parses; every eval has a unique `id`, a `prompt`, and an `expect` that is either a file the routing table routes to or `ask-first: <item>` |
+| G6 | An agent in `.claude/agents/` declares `name`, `description`, `tools`, `model` and `effort`, and its `model` and `effort` match its row in [recipes.md](recipes.md#roles); `.claude/settings.json` parses and its `model` and `effortLevel` match the session's row |
+| G7 | `evals/evals.json` exists and parses; every eval has a unique `id`, a `prompt`, and an `expect` that is either a file the routing table routes to or `ask-first: <item>`, where the item (up to any parenthesis) appears in the [ask-first list](conventions.md#ask-first) |
 
 ## check_docs_sync.py
 

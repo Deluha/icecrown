@@ -44,7 +44,7 @@ codenames appear in a banner on an interactive terminal only; logs and CI output
 | For | Read |
 |---|---|
 | Users | The documentation site, built from [`docs/`](docs/index.md): user guide, [compatibility promise](docs/compatibility.md), fingerprint spec and store format |
-| Contributors | [CONTRIBUTING.md](CONTRIBUTING.md): one command, `uv run python tools/verify.py`, runs every gate |
+| Contributors | [CONTRIBUTING.md](CONTRIBUTING.md): one command, `uv run python tools/verify.py`, runs the checkers, lint, types and tests |
 | AI agents | [CLAUDE.md](CLAUDE.md), the operating contract, and the development skill it routes through |
 | What changed | `CHANGELOG.md`; what is planned: [ROADMAP.md](ROADMAP.md) |
 

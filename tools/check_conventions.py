@@ -183,7 +183,9 @@ def check_versions(rel: str, inner: Path, tree: ast.Module) -> list[Violation]:
             Violation(rel, node.lineno, "C6", f"{name.id} assigned outside {VERSIONS_MODULE}")
             for target in targets
             for name in ast.walk(target)
-            if isinstance(name, ast.Name) and name.id.endswith("_VERSION")
+            if isinstance(name, ast.Name)
+            and isinstance(name.ctx, ast.Store)
+            and name.id.endswith("_VERSION")
         )
     return found
 

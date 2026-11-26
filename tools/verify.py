@@ -1,4 +1,4 @@
-"""Run every gate a pull request needs and print one pass/fail table.
+"""Run the checkers, lint, format check, type check and tests, and print one pass/fail table.
 
 Usage: ``uv run python tools/verify.py [--only NAME ...] [--list]``. The gates are described in
 ``.claude/skills/project-icecrown-development/references/qa-and-ci.md``.

@@ -138,7 +138,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _run(args, root, parser)
     except subprocess.CalledProcessError as err:
         print(
-            f"check_docs_sync: git failed ({' '.join(err.cmd[3:])}): {err.stderr.strip()}; "
+            f"check_docs_sync: git failed ({' '.join(err.cmd[3:])}): "
+            f"{err.stderr.strip() or f'exit {err.returncode}'}; "
             "in a shallow clone, fetch more history (git fetch --unshallow)"
         )
         return 2

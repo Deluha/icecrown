@@ -190,8 +190,12 @@ def test_g7_evals(tmp_path: Path) -> None:
             {"id": "f", "prompt": "p", "expect": "ask-first:  "},
         ]
     }
-    root = make_tree(tmp_path, {"evals/evals.json": json.dumps(evals)})
-    messages = sorted(v.message for v in gi.check(root))
+    conventions = "# Conventions\n\n## Ask first\n\n- Publishing a release\n"
+    root = make_tree(
+        tmp_path,
+        {f"{SKILL}/references/conventions.md": conventions, "evals/evals.json": json.dumps(evals)},
+    )
+    messages = sorted(v.message for v in gi.check(root) if v.code == "G7")
     assert messages == [
         "a: unknown route 'references/nowhere.md'",
         "d: unknown route 'SKILL.md'",
@@ -200,6 +204,22 @@ def test_g7_evals(tmp_path: Path) -> None:
         "eval #3 needs string id, prompt, expect",
         "f: name the ask-first item",
     ]
+
+
+def test_g7_ask_first_items_come_from_the_conventions(tmp_path: Path) -> None:
+    conventions = "# Conventions\n\n## Ask first\n\n| Item |\n|---|\n| Publishing a release |\n"
+    evals = {
+        "evals": [
+            {"id": "ok", "prompt": "p", "expect": "ask-first: publishing a release (to PyPI)"},
+            {"id": "bad", "prompt": "p", "expect": "ask-first: renaming a variable"},
+        ]
+    }
+    root = make_tree(
+        tmp_path,
+        {f"{SKILL}/references/conventions.md": conventions, "evals/evals.json": json.dumps(evals)},
+    )
+    messages = [v.message for v in gi.check(root) if v.code == "G7"]
+    assert messages == ["bad: 'renaming a variable' is not on the ask-first list"]
 
 
 def test_g7_missing_evals_file(tmp_path: Path) -> None:

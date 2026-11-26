@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 import pytest
@@ -75,9 +76,14 @@ def test_c1_print_and_std_streams_outside_messages(tmp_path: Path) -> None:
 
 def test_c1_sees_through_aliases_and_original_streams(tmp_path: Path) -> None:
     root = make_repo(
-        tmp_path, {"src/icecrown/_a.py": "import sys as s\ns.stdout.write('x')\nsys.__stderr__\n"}
+        tmp_path,
+        {
+            "src/icecrown/_a.py": (
+                "import sys as s\ns.stdout.write('x')\nsys.__stderr__\nfrom sys import __stdout__\n"
+            )
+        },
     )
-    assert codes(root) == ["C1:src/icecrown/_a.py"] * 2
+    assert codes(root) == ["C1:src/icecrown/_a.py"] * 3
 
 
 @pytest.mark.parametrize(
@@ -178,7 +184,7 @@ def test_c6_version_constants_only_in_the_registry(tmp_path: Path) -> None:
             "src/icecrown/_versions.py": "STORE_FORMAT_VERSION = 1\n",
             "src/icecrown/_store.py": "SPEC_VERSION: int = 1\n__version__ = 'x'\n",
             "src/icecrown/_other.py": (
-                "A_VERSION, B = 1, 2\nif True:\n    C_VERSION = 3\n"
+                "A_VERSION, B = 1, 2\nif True:\n    C_VERSION = 3\nCACHE[SPEC_VERSION] = 1\n"
                 "try:\n    pass\nexcept ImportError:\n    D_VERSION = 4\n"
                 "def f() -> None:\n    LOCAL_VERSION = 5\n"
             ),
@@ -228,6 +234,15 @@ def test_c7_accepts_an_imported_module(tmp_path: Path) -> None:
 
 def test_entry_points_are_read_from_pyproject(tmp_path: Path) -> None:
     assert cc.declared_entry_points(make_repo(tmp_path)) == {"__main__", "pytest_plugin"}
+
+
+def test_the_documented_fingerprint_path_matches_the_checker() -> None:
+    text = (
+        repo_root() / ".claude/skills/project-icecrown-development/references/architecture.md"
+    ).read_text(encoding="utf-8")
+    line = next(line for line in text.splitlines() if line.startswith("The fingerprint path"))
+    paragraph = text[text.index(line) :].split("\n\n")[0]
+    assert set(re.findall(r"`(_\w+\.py)`", paragraph)) == cc.FINGERPRINT_PATH
 
 
 def test_the_repository_itself_passes() -> None:

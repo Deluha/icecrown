@@ -1,8 +1,7 @@
-# Release pipeline: a v* tag on a commit of main builds the distributions once (in a job without
-# an OIDC token), attests them, publishes to TestPyPI and
-# then PyPI (each behind its environment's approval gate) with trusted publishing, and creates the
-# GitHub Release from the changelog. See
-# .claude/skills/project-icecrown-development/references/workflows/releasing.md.
+# Release pipeline. A v* tag on a commit of main builds the distributions once, in a job without an
+# OIDC token; a second job attests them; TestPyPI and then PyPI publish them with trusted
+# publishing, each behind its environment's approval gate; the GitHub Release is created from the
+# changelog. See .claude/skills/project-icecrown-development/references/workflows/releasing.md.
 name: release
 
 on:

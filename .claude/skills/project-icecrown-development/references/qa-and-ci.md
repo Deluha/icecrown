@@ -92,8 +92,9 @@ at the top of each workflow.
   through `uv run --frozen`, so their versions never drift from CI.
 - **Claude Code hooks** (`.claude/hooks/`): `session-start.sh` syncs the environment and installs
   the git hooks in cloud sessions (skip with `ICECROWN_SKIP_DEV_SETUP=1`); `post_edit_check.py`
-  runs the locked `ruff check` on a Python file after an edit, through `uv run --no-sync`, and
-  reports a finding back to the session. It never blocks when ruff cannot run.
+  runs the ruff in the project's `.venv` (installed from `uv.lock`) on a Python file after an edit
+  and reports a finding back to the session. Without a synced `.venv`, or when ruff cannot run, it
+  does nothing.
 
 ## Supply chain
 
@@ -106,8 +107,9 @@ at the top of each workflow.
 - Development tools (ruff, mypy, pre-commit, actionlint, zizmor) are pinned by `uv.lock`; the hooks
   run them through `uv run --frozen`.
 - Dependabot proposes weekly, grouped updates for actions and `uv.lock` (the lockfile only, never a
-  lower bound), each release aged seven days first. Dependency review blocks a pull request that adds a known vulnerability or a
-  GPL / AGPL dependency.
+  lower bound), each release aged seven days first.
+- Dependency review blocks a pull request that adds a known vulnerability or a GPL / AGPL
+  dependency.
 - CodeQL scans Python and the workflows; Scorecard publishes the project's posture weekly.
 
 ## Repository settings
