@@ -271,17 +271,18 @@ def routed_references(root: Path) -> set[str]:
     return routed
 
 
-def ask_first_text(root: Path) -> str:
-    """Return the ask-first section of the conventions, lower-cased and without code marks."""
+def ask_first_items(root: Path) -> list[str]:
+    """Return the first-column cells of the ask-first table, lower-cased and without code marks."""
     path = root / CONVENTIONS_FILE
     if not path.is_file():
-        return ""
-    text = path.read_text(encoding="utf-8")
-    start = text.find(f"## {ASK_FIRST_HEADING}\n")
-    if start < 0:
-        return ""
-    end = text.find("\n## ", start + 1)
-    return text[start : end if end >= 0 else len(text)].replace("`", "").lower()
+        return []
+    rows = table_rows(path.read_text(encoding="utf-8"), heading=ASK_FIRST_HEADING)
+    return [cells[0].replace("`", "").lower() for _, cells in rows if cells]
+
+
+def _on_ask_first_list(item: str, items: Sequence[str]) -> bool:
+    pattern = re.compile(rf"(?<!\w){re.escape(item)}(?!\w)")
+    return any(pattern.search(cell) for cell in items)
 
 
 def check_evals(root: Path) -> list[Violation]:
@@ -297,7 +298,7 @@ def check_evals(root: Path) -> list[Violation]:
     if not isinstance(evals, list) or not evals:
         return [Violation(EVALS_FILE, 1, "G7", "expected a non-empty 'evals' list")]
     routed = routed_references(root)
-    ask_first = ask_first_text(root)
+    ask_first = ask_first_items(root)
     found = []
     ids: set[str] = set()
     for index, item in enumerate(evals):
@@ -318,7 +319,7 @@ def check_evals(root: Path) -> list[Violation]:
                 found.append(
                     Violation(EVALS_FILE, 1, "G7", f"{item['id']}: name the ask-first item")
                 )
-            elif item_name not in ask_first:
+            elif not _on_ask_first_list(item_name, ask_first):
                 message = f"{item['id']}: {item_name!r} is not on the ask-first list"
                 found.append(Violation(EVALS_FILE, 1, "G7", message))
         elif expect not in routed:

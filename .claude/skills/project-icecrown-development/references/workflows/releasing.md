@@ -22,6 +22,15 @@ The pipeline is `.github/workflows/release.yml` ([qa-and-ci.md](../qa-and-ci.md#
    `rcN` and `.devN` versions, with the distributions attached.
 8. Check the release page and install the published version in a clean environment.
 
+## When a release run fails
+
+`ci-build` runs the tag check (`tools/release_notes.py`) on every pull request, so a version
+without its changelog entry fails before it is tagged. If a run still fails after the tag, the tag
+stays — `v*` tags can be neither moved nor deleted. Fix the cause in a pull request and release the
+next version (`X.Y.Z+1`, or `.devN+1` for a rehearsal); the failed tag gets no release. A failure
+after TestPyPI succeeded can be re-run from the `pypi` job once its cause is fixed outside the
+code.
+
 ## One-time setup (owner)
 
 - On PyPI and TestPyPI, add a pending trusted publisher for project `icecrown`: repository

@@ -6,7 +6,7 @@ title = "Project Icecrown"
 useDefault = true
 
 [[allowlists]]
-description = "Package hashes in the lockfile and fingerprint test vectors are not secrets"
+description = "Package hashes in the lockfile are not secrets"
 paths = [
   '''^uv\.lock$''',
 ]

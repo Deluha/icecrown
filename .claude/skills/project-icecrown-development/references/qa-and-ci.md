@@ -41,7 +41,10 @@ the docstrings of the names in `icecrown.__all__`. The local build command is in
 
 - Every test lives under `tests/` (R4); checker tests under `tests/tools/`.
 - Tests import the installed package (`src/` layout). `ci-build` runs the suite against the built
-  wheel.
+  wheel. The `dev` group installs the package's own `pandas` and `sql` extras, so every matrix cell
+  and every local `uv sync` tests the adapters with the latest releases.
+- The build backend is pinned for uv builds (`build-constraint-dependencies` in `pyproject.toml`), so
+  a release never builds with an unreviewed hatchling.
 - Offline (R5): `--disable-socket` is in the pytest configuration; Unix sockets stay allowed for
   local inter-process use. No test reaches a live database; SQL tests use in-memory SQLite.
 - Warnings are errors; markers are strict; tests import in `importlib` mode.
@@ -76,7 +79,7 @@ at the top of each workflow.
 | `ci-pre-commit.yml` | pull request, push to `main` | Every pre-commit hook on all files, zizmor's online audits, the full-history secret scan |
 | `ci-docs-sync.yml` | pull request | `check_docs_sync.py` over the pull request's commits |
 | `ci-tests.yml` | pull request, push to `main` | The support matrix, the bound jobs, combined coverage, and `CI gate`, which fails unless the matrix, the lowest-bound job and coverage succeeded |
-| `ci-build.yml` | pull request, push to `main` | sdist and wheel, `twine check --strict`, tests against the installed wheel on 3.11 and 3.15 |
+| `ci-build.yml` | pull request, push to `main` | The release tag check for the current version, sdist and wheel, `twine check --strict`, tests against the installed wheel with its extras on 3.11 and 3.15 |
 | `ci-docs.yml` | pull request, push to `main` | The documentation site, warnings as errors |
 | `codeql.yml` | pull request, push to `main`, weekly | CodeQL code scanning (Python and Actions) |
 | `dependency-review.yml` | pull request | Blocks a dependency with a known vulnerability |
@@ -108,8 +111,8 @@ at the top of each workflow.
   run them through `uv run --frozen`.
 - Dependabot proposes weekly, grouped updates for actions and `uv.lock` (the lockfile only, never a
   lower bound), each release aged seven days first.
-- Dependency review blocks a pull request that adds a known vulnerability or a GPL / AGPL
-  dependency.
+- Dependency review blocks a pull request that adds a known vulnerability or a GPL-2.0, GPL-3.0
+  or AGPL-3.0 dependency.
 - CodeQL scans Python and the workflows; Scorecard publishes the project's posture weekly.
 
 ## Repository settings

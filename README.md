@@ -3,9 +3,8 @@
 **Snapshot testing for tabular data.** Freeze the output of a data pipeline, verify it on every run or
 pull request, and see exactly which rows, columns and values moved when it changed.
 
-> **Status: in development.** Phase 0 (the foundation) is in review; no product feature has shipped
-> yet.
-> The scope and the build order are in [`ROADMAP.md`](ROADMAP.md).
+> **Status: in development.** No product feature has shipped yet. The scope, the build order and
+> each phase's status are in [`ROADMAP.md`](https://github.com/Deluha/icecrown/blob/main/ROADMAP.md).
 
 ## What it does
 
@@ -36,24 +35,24 @@ pip install icecrown
 
 Each system is named after Icecrown Citadel. **Frostmourne**, the lead feature, is the snapshot engine:
 it captures a dataset's *soul* — a deterministic fingerprint of its schema and content — and keeps it in
-the Frozen Throne, the snapshot store. The full table is in the [roadmap](ROADMAP.md#codenames). The
+the Frozen Throne, the snapshot store. The full table is in the [roadmap](https://github.com/Deluha/icecrown/blob/main/ROADMAP.md#codenames). The
 codenames appear in a banner on an interactive terminal only; logs and CI output stay plain.
 
 ## Documentation
 
 | For | Read |
 |---|---|
-| Users | The documentation site, built from [`docs/`](docs/index.md): user guide, [compatibility promise](docs/compatibility.md), fingerprint spec and store format |
-| Contributors | [CONTRIBUTING.md](CONTRIBUTING.md): one command, `uv run python tools/verify.py`, runs the checkers, lint, types and tests |
-| AI agents | [CLAUDE.md](CLAUDE.md), the operating contract, and the development skill it routes through |
-| What changed | `CHANGELOG.md`; what is planned: [ROADMAP.md](ROADMAP.md) |
+| Users | The documentation site, built from [`docs/`](https://github.com/Deluha/icecrown/blob/main/docs/index.md): user guide, [compatibility promise](https://github.com/Deluha/icecrown/blob/main/docs/compatibility.md), fingerprint spec and store format |
+| Contributors | [CONTRIBUTING.md](https://github.com/Deluha/icecrown/blob/main/CONTRIBUTING.md): one command, `uv run python tools/verify.py`, runs the checkers, lint, types and tests |
+| AI agents | [CLAUDE.md](https://github.com/Deluha/icecrown/blob/main/CLAUDE.md), the operating contract, and the development skill it routes through |
+| What changed | `CHANGELOG.md`; what is planned: [ROADMAP.md](https://github.com/Deluha/icecrown/blob/main/ROADMAP.md) |
 
-Security issues: see [SECURITY.md](SECURITY.md). Everyone taking part follows the
-[code of conduct](CODE_OF_CONDUCT.md).
+Security issues: see [SECURITY.md](https://github.com/Deluha/icecrown/blob/main/SECURITY.md). Everyone taking part follows the
+[code of conduct](https://github.com/Deluha/icecrown/blob/main/CODE_OF_CONDUCT.md).
 
 ## License
 
-[MIT](LICENSE).
+[MIT](https://github.com/Deluha/icecrown/blob/main/LICENSE).
 
 ## Name
 

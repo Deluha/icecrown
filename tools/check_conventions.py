@@ -41,6 +41,7 @@ NETWORK_MODULES = frozenset(
         "httpx",
         "aiohttp",
         "urllib3",
+        "pyarrow.flight",
     }
 )
 ALWAYS_PUBLIC = frozenset({"__init__.py", "__main__.py"})

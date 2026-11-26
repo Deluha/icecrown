@@ -190,7 +190,7 @@ def test_g7_evals(tmp_path: Path) -> None:
             {"id": "f", "prompt": "p", "expect": "ask-first:  "},
         ]
     }
-    conventions = "# Conventions\n\n## Ask first\n\n- Publishing a release\n"
+    conventions = "# Conventions\n\n## Ask first\n\n| Item |\n|---|\n| Publishing a release |\n"
     root = make_tree(
         tmp_path,
         {f"{SKILL}/references/conventions.md": conventions, "evals/evals.json": json.dumps(evals)},
@@ -207,11 +207,17 @@ def test_g7_evals(tmp_path: Path) -> None:
 
 
 def test_g7_ask_first_items_come_from_the_conventions(tmp_path: Path) -> None:
-    conventions = "# Conventions\n\n## Ask first\n\n| Item |\n|---|\n| Publishing a release |\n"
+    conventions = (
+        "# Conventions\n\n## Ask first\n\n| Item | Why |\n|---|---|\n"
+        "| Publishing a release | It is public |\n\nPermission prompts are separate.\n"
+    )
     evals = {
         "evals": [
             {"id": "ok", "prompt": "p", "expect": "ask-first: publishing a release (to PyPI)"},
             {"id": "bad", "prompt": "p", "expect": "ask-first: renaming a variable"},
+            {"id": "why", "prompt": "p", "expect": "ask-first: it is public"},
+            {"id": "prose", "prompt": "p", "expect": "ask-first: permission prompts"},
+            {"id": "part", "prompt": "p", "expect": "ask-first: lish"},
         ]
     }
     root = make_tree(
@@ -219,7 +225,12 @@ def test_g7_ask_first_items_come_from_the_conventions(tmp_path: Path) -> None:
         {f"{SKILL}/references/conventions.md": conventions, "evals/evals.json": json.dumps(evals)},
     )
     messages = [v.message for v in gi.check(root) if v.code == "G7"]
-    assert messages == ["bad: 'renaming a variable' is not on the ask-first list"]
+    assert messages == [
+        "bad: 'renaming a variable' is not on the ask-first list",
+        "why: 'it is public' is not on the ask-first list",
+        "prose: 'permission prompts' is not on the ask-first list",
+        "part: 'lish' is not on the ask-first list",
+    ]
 
 
 def test_g7_missing_evals_file(tmp_path: Path) -> None:

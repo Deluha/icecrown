@@ -19,6 +19,9 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 
+[manifest]
+build-constraints = [{ name = "hatchling", specifier = "==1.33.0" }]
+
 [[package]]
 name = "accessible-pygments"
 version = "0.0.5"
@@ -598,6 +601,7 @@ dev = [
     { name = "actionlint-py" },
     { name = "coverage" },
     { name = "hypothesis" },
+    { name = "icecrown", extra = ["pandas", "sql"] },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -638,6 +642,7 @@ dev = [
     { name = "actionlint-py", specifier = ">=1.7.12" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.10" },
     { name = "hypothesis", specifier = ">=6.150" },
+    { name = "icecrown", extras = ["pandas", "sql"] },
     { name = "mypy", specifier = ">=2.4" },
     { name = "pre-commit", specifier = ">=4.3" },
     { name = "pytest", specifier = ">=9.0" },

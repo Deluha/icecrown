@@ -12,7 +12,7 @@ only what `ruff` and `mypy` cannot express.
 |---|---|---|
 | C1 | No `print()` call and no `sys.stdout`, `sys.stderr`, `sys.__stdout__` or `sys.__stderr__` access (also through an alias of `sys`) outside `_messages.py` | R2 |
 | C2 | In the [fingerprint path](architecture.md#module-map) (those modules, or packages of the same name): no import of `time`, `random`, `secrets`, `uuid`, `os`, `platform`, `locale`, `getpass`; no call of the builtin `hash()` or `id()`; no `.now()`, `.today()` or `.utcnow()` call | R3 |
-| C3 | No network module imported anywhere in `src/`: `socket`, `ssl`, `http.client`, `http.server`, `urllib.request`, `ftplib`, `smtplib`, `requests`, `httpx`, `aiohttp`, `urllib3` | R5 |
+| C3 | No network module imported anywhere in `src/`: `socket`, `ssl`, `http.client`, `http.server`, `urllib.request`, `ftplib`, `smtplib`, `requests`, `httpx`, `aiohttp`, `urllib3`, `pyarrow.flight` | R5 |
 | C4 | Every top-level module or package of `icecrown` is private (`_*`) unless it is `__init__.py`, `__main__.py` or an entry point declared in `pyproject.toml`; every function in an entry-point module or package is at most 40 lines | R8 |
 | C5 | No `test_*.py`, `*_test.py` or `conftest.py` outside `tests/` (tracked and untracked files, ignored ones excluded) | R4 |
 | C6 | A module-level name ending in `_VERSION` (including tuple targets and assignments inside module-level `if`, `try` and `with` blocks; reading one, as in `TABLE[SPEC_VERSION] = …`, is fine) is assigned only in `_versions.py` | R1, R6 |
@@ -34,7 +34,7 @@ every `.md` under `.claude/`.
 | G4 | A rule in `.claude/rules/` has a `paths` list in its frontmatter and at most 6 non-blank body lines, each holding a link (pointer-only) |
 | G5 | A command skill (every skill but the development skill) has `name` and `description` and at most 6 non-blank body lines, each holding a link |
 | G6 | An agent in `.claude/agents/` declares `name`, `description`, `tools`, `model` and `effort`, and its `model` and `effort` match its row in [recipes.md](recipes.md#roles); `.claude/settings.json` parses and its `model` and `effortLevel` match the session's row |
-| G7 | `evals/evals.json` exists and parses; every eval has a unique `id`, a `prompt`, and an `expect` that is either a file the routing table routes to or `ask-first: <item>`, where the item (up to any parenthesis) appears in the [ask-first list](conventions.md#ask-first) |
+| G7 | `evals/evals.json` exists and parses; every eval has a unique `id`, a `prompt`, and an `expect` that is either a file the routing table routes to or `ask-first: <item>`, where the item (up to any parenthesis) appears, as whole words, in the first column of the [ask-first table](conventions.md#ask-first) |
 
 ## check_docs_sync.py
 

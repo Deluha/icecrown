@@ -13,6 +13,8 @@ adapter contract is fixed in Phase 2 and documented under `docs/`.
 5. Map every native type to a logical type, or refuse it with a clear error. The fingerprint must not
    depend on the source: add a test that the same logical data through this source and through Arrow
    gives the same fingerprint.
-6. Tests are offline (R5): files under `tmp_path`, in-memory databases, synthetic result sets.
-7. Document the source and its options under `docs/` and add a changelog entry (R7).
-8. Run [the verify command](../qa-and-ci.md#verify), then the `reviewer`.
+6. A file source reads through an explicit `pyarrow.fs.LocalFileSystem`; a reference with a URI
+   scheme (`s3://`, `gs://`, `hdfs://`) is refused, so no source reaches the network (R5).
+7. Tests are offline (R5): files under `tmp_path`, in-memory databases, synthetic result sets.
+8. Document the source and its options under `docs/` and add a changelog entry (R7).
+9. Run [the verify command](../qa-and-ci.md#verify), then the `reviewer`.

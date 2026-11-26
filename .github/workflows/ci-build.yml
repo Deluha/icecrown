@@ -29,6 +29,8 @@ jobs:
       - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
         with:
           python-version: "3.15"
+      - name: Check that the version has a changelog entry (the release workflow's own check)
+        run: uv run --no-project python tools/release_notes.py "v$(uv version --short)" > /dev/null
       - name: Build the sdist and the wheel
         run: uv build
       - name: Check the distribution metadata
@@ -67,7 +69,8 @@ jobs:
       - name: Install the wheel and the test group into a fresh environment
         run: |
           uv venv .wheel-venv
-          uv pip install --python .wheel-venv dist/*.whl
+          wheel=$(ls dist/*.whl)
+          uv pip install --python .wheel-venv "${wheel}[pandas,sql]"
           uv pip install --python .wheel-venv --group test
       - name: Check that the package is imported from the wheel
         run: .wheel-venv/bin/python -c "import icecrown, sys; assert 'site-packages' in icecrown.__file__, icecrown.__file__; print(icecrown.__file__)"

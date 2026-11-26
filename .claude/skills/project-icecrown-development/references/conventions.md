@@ -77,7 +77,7 @@ no prompt appears.
 
 - Every error the library raises derives from `IcecrownError` in `icecrown._errors`; the public
   hierarchy is part of the compatibility promise.
-- A message says what happened, why, and what to do next.
+- A message has the shape in [style.md](style.md#console-messages).
 - A message never holds a secret (a connection URL, a token) and, by default, no cell value.
 - Third-party exceptions are wrapped at the boundary: `raise SourceReadError(...) from err`.
 - No bare `except`, no `except Exception: pass`. Catch the narrowest type.

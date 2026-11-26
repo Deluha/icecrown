@@ -25,6 +25,7 @@
     "ask": [
       "Edit(CLAUDE.md)",
       "Edit(.claude/settings.json)",
+      "Edit(.claude/settings.local.json)",
       "Edit(.claude/agents/**)",
       "Edit(.claude/hooks/**)",
       "Edit(.github/workflows/**)",
@@ -45,6 +46,8 @@
       "Read(**/*.pem)",
       "Read(**/*.key)",
       "Read(~/.pypirc)",
+      "Read(~/.netrc)",
+      "Read(~/.ssh/**)",
       "Agent(Explore)"
     ]
   },

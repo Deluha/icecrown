@@ -61,6 +61,7 @@ docs = [
     "furo>=2025.12.19; python_full_version >= '3.13'",
 ]
 dev = [
+    "icecrown[pandas,sql]",
     { include-group = "test" },
     { include-group = "lint" },
 ]
@@ -68,6 +69,7 @@ dev = [
 [tool.uv]
 default-groups = ["dev"]
 required-version = ">=0.13"
+build-constraint-dependencies = ["hatchling==1.33.0"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/icecrown"]
