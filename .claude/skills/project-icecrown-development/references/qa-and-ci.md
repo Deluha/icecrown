@@ -20,7 +20,7 @@ them. A contributor needs nothing else; CI runs the same gates.
 | Lint | `ruff check` | pre-commit | yes | `ci-pre-commit` |
 | Format | `ruff format` | pre-commit | yes | `ci-pre-commit` |
 | Types | `mypy --strict` | pre-commit | yes | `ci-pre-commit` |
-| Secrets | gitleaks | pre-commit | — | `ci-pre-commit` |
+| Secrets | gitleaks | pre-commit (staged) | — | `ci-pre-commit` (all files and the full history) |
 | Conventions | `tools/check_conventions.py` | pre-commit | yes | `ci-pre-commit` |
 | Guidance integrity | `tools/check_guidance_integrity.py` | pre-commit | yes | `ci-pre-commit` |
 | Docs sync | `tools/check_docs_sync.py` | commit-msg | yes | `ci-docs-sync` |
@@ -67,8 +67,8 @@ at the top of each workflow.
 |---|---|---|
 | `ci-pre-commit.yml` | pull request, push to `main` | Every pre-commit hook on all files |
 | `ci-docs-sync.yml` | pull request | `check_docs_sync.py` over the pull request's commits |
-| `ci-tests.yml` | pull request, push to `main` | The support matrix, combined coverage, the `CI gate` check |
-| `ci-build.yml` | pull request, push to `main` | sdist and wheel, metadata check, tests against the wheel |
+| `ci-tests.yml` | pull request, push to `main` | The support matrix, the bound jobs, combined coverage, and `CI gate`, which fails unless the matrix, the lowest-bound job and coverage succeeded |
+| `ci-build.yml` | pull request, push to `main` | sdist and wheel, `twine check --strict`, tests against the installed wheel on 3.11 and 3.15 |
 | `ci-docs.yml` | pull request, push to `main` | The documentation site, warnings as errors |
 | `ci-workflow-lint.yml` | pull request touching `.github/` | actionlint and zizmor |
 | `codeql.yml` | pull request, push to `main`, weekly | CodeQL code scanning (Python and Actions) |

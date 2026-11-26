@@ -1,0 +1,156 @@
+# The support matrix, the dependency-bound jobs, combined coverage and the one required check.
+# The matrix is documented in .claude/skills/project-icecrown-development/references/qa-and-ci.md.
+name: ci-tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: "1"
+  HYPOTHESIS_PROFILE: ci
+  UV_NO_PROGRESS: "1"
+
+jobs:
+  tests:
+    name: tests (${{ matrix.os }}, ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        include:
+          - { os: macos-15, python: "3.11" }
+          - { os: macos-15, python: "3.15" }
+          - { os: windows-2025, python: "3.11" }
+          - { os: windows-2025, python: "3.15" }
+          - { os: ubuntu-24.04-arm, python: "3.15" }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Install the locked environment
+        run: uv sync --frozen --group test
+      - name: Run the tests with coverage
+        run: uv run --frozen coverage run -m pytest
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: coverage-${{ matrix.os }}-${{ matrix.python }}
+          path: .coverage.*
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  lowest-bounds:
+    name: lowest dependency bounds (3.11)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          python-version: "3.11"
+      - name: Resolve every direct dependency at its lower bound
+        run: uv lock --resolution lowest-direct
+      - name: Install, with every optional extra
+        run: uv sync --group test --all-extras
+      - name: Show the resolved runtime versions
+        run: uv pip list | grep -i -E '^(pyarrow|pandas|sqlalchemy|numpy) '
+      - name: Run the tests
+        run: uv run pytest
+
+  pre-release:
+    name: pre-release dependencies (3.15, non-blocking)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          python-version: "3.15"
+      - name: Resolve the newest releases, pre-releases included
+        run: uv lock --upgrade --prerelease allow
+      - name: Install, with every optional extra
+        run: uv sync --group test --all-extras
+      - name: Run the tests
+        run: uv run pytest
+
+  next-python:
+    name: next Python (3.16-dev, non-blocking)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        id: python
+        with:
+          python-version: "3.16-dev"
+          allow-prereleases: true
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+      - name: Install the locked environment on the pre-release interpreter
+        run: uv sync --frozen --group test --python "$PYTHON"
+        env:
+          PYTHON: ${{ steps.python.outputs.python-path }}
+      - name: Run the tests
+        run: uv run --frozen --no-sync pytest
+
+  coverage:
+    name: combined coverage
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+        with:
+          python-version: "3.15"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+      - name: Install coverage
+        run: uv sync --frozen --only-group test
+      - name: Combine and check the threshold
+        run: |
+          uv run --frozen --no-sync coverage combine
+          uv run --frozen --no-sync coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+          uv run --frozen --no-sync coverage report
+
+  gate:
+    name: CI gate
+    if: always()
+    needs: [tests, lowest-bounds, coverage]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every needed job to have succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
