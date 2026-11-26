@@ -224,6 +224,47 @@ Kept against the review's advice, because they are owner decisions: the full age
 (the review found it heavy for a one-maintainer v0.1) and the codenames (the review suggested keeping
 them out of user-facing output; the banner rule above is the compromise).
 
+Confirmed at sign-off (owner, 2026-11-26):
+
+- **Prior art.** No maintained tool combines a hash-only committed baseline, a cross-source fingerprint
+  with a published spec, and the freeze → verify → explain → accept loop. The closest workflow is
+  pytest-regressions' `dataframe_regression` (its baseline holds the values, pandas only); the closest
+  keyed diff is datacompy (no baseline). Small fingerprint projects (df-fingerprint's "df-canon", dfhash,
+  idhash) and the Dataverse UNF are prior art the Phase 1 spec cites. Position: a pytest-regressions-style
+  workflow without the data in git, the same across sources.
+- **Lower bounds.** `pyarrow>=18.0.0` (above the CVE-2023-47248 fix in 14.0.1; the first release that
+  works with numpy 2 and makes numpy optional, so the lowest-bound job installs). Extras:
+  `pandas>=2.2.2`, `sqlalchemy>=2.0`.
+- **Support policy, concretely.** Python 3.11–3.15 (3.10 reached end of life on 2026-10-01; 3.15.0
+  shipped on 2026-10-09). Pre-release: Python `3.16-dev` and pre-release dependencies, both reported
+  and non-blocking.
+- **CI matrix.** Tests on Python 3.11–3.15 on `ubuntu-24.04`; 3.11 and 3.15 on `macos-15` (arm64) and
+  `windows-2025`; 3.15 on `ubuntu-24.04-arm`. Lowest-bound job (`uv --resolution lowest-direct`) on
+  3.11. Combined branch coverage, 90 %, inside the `CI gate` check. Runner labels pinned, never
+  `-latest`.
+- **Documentation generator.** Sphinx with MyST-Parser, sphinx-autoapi and the Furo theme, built with
+  warnings as errors. MkDocs has had no release since 2024-08 and Material for MkDocs reaches end of
+  life on 2027-05-05; Zensical is revisited when its API-reference support is stable.
+- **Further tools.** pre-commit, gitleaks, actionlint, Hypothesis, and `pytest-socket` (development
+  only) to enforce offline tests.
+- **Models.** Session `opus` at effort `high`; `implementer` `opus` / `high`; `reviewer` `opus` /
+  `xhigh`; `reader` `sonnet` / `medium`; `scribe` `haiku` / `low`. Aliases, not pinned model IDs.
+- **Permissions.** Default mode `acceptEdits`. Allow: the verify and check commands, `uv run` of
+  pytest, ruff, mypy and pre-commit, `uv sync`, read-only git. Ask: edits to the guidance machinery and
+  CI files, `pyproject.toml`, the fingerprint-spec and store-format docs; `uv add`, `uv remove`,
+  `uv publish`, `git push`, `git tag`. Deny: reading `.env` files, keys and `~/.pypirc`; the built-in
+  explore agent.
+- **Mechanical conventions.** C1 console output only through the message helpers; C2 no clock,
+  randomness, environment, locale or builtin `hash()` in a fingerprint path; C3 no network imports in
+  `src/`; C4 public modules are only `__init__`, `__main__` and declared entry points, whose functions
+  stay short; C5 test files only under `tests/`; C6 format-version constants only in the versions
+  registry; C7 `__all__` exists, is sorted, and every name in it has a docstring.
+- **Rulesets.** `main`: pull request required with no required approval (one maintainer), the CI
+  checks required, conversations resolved, no force-push or deletion. `v*` tags: created only by the
+  owner, never moved or deleted.
+- **The PyPI name.** A pending trusted publisher does not reserve a name, so after the TestPyPI
+  rehearsal `0.1.0.dev0` is also published to PyPI (pip skips pre-releases by default).
+
 ### Phase 1 — Frostmourne: soul capture and the Frozen Throne
 
 The lead feature. After this phase the Python API can freeze a table and say whether another one matches.
