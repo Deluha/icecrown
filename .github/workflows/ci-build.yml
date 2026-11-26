@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: "3.15"
       - name: Check that the version has a changelog entry (the release workflow's own check)
-        run: uv run --no-project python tools/release_notes.py "v$(uv version --short)" > /dev/null
+        run: uv run --no-project python tools/release_notes.py > /dev/null
       - name: Build the sdist and the wheel
         run: uv build
       - name: Check the distribution metadata

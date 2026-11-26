@@ -1,7 +1,8 @@
 """Check a release tag against the package version and print its changelog entry.
 
-Usage: ``python tools/release_notes.py v0.1.0 [--is-prerelease]``. The release workflow runs it
-before building, and again to create the GitHub Release. A pre-release without its own entry (a
+Usage: ``python tools/release_notes.py [v0.1.0] [--is-prerelease]``. The release workflow runs it
+before building, and again to create the GitHub Release; without a tag, it checks the current
+version, as ``ci-build`` does on every pull request. A pre-release without its own entry (a
 ``.devN`` rehearsal) gets the "Unreleased" section.
 """
 
@@ -63,7 +64,11 @@ def notes(root: Path, tag: str) -> tuple[str | None, str]:
 def main(argv: Sequence[str] | None = None) -> int:
     """Print the release notes for a tag, or an error, and return the exit code."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("tag", help="the release tag, for example v0.1.0")
+    parser.add_argument(
+        "tag",
+        nargs="?",
+        help="the release tag, for example v0.1.0 (default: v plus the version in pyproject.toml)",
+    )
     parser.add_argument("--root", type=Path, default=repo_root(), help="repository root")
     parser.add_argument(
         "--is-prerelease",
@@ -71,6 +76,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="print nothing; exit 0 if the tag is a pre-release, 1 if not",
     )
     args = parser.parse_args(argv)
+    if args.tag is None:
+        args.tag = f"v{package_version(args.root)}"
     if args.is_prerelease:
         return 0 if is_prerelease(args.tag.removeprefix("v")) else 1
     body, error = notes(args.root, args.tag)

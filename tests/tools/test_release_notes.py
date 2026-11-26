@@ -75,6 +75,14 @@ def test_is_prerelease_flag(tmp_path: Path) -> None:
     assert rn.main(["v0.1.0", "--root", root, "--is-prerelease"]) == 1
 
 
+def test_without_a_tag_the_current_version_is_checked(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert rn.main(["--root", str(make_root(tmp_path, "0.1.0"))]) == 0
+    assert capsys.readouterr().out == "### Added\n\n- The first release.\n"
+    assert rn.main(["--root", str(make_root(tmp_path, "0.3.0"))]) == 1
+
+
 def test_main_prints_the_notes(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert rn.main(["v0.1.0", "--root", str(make_root(tmp_path, "0.1.0"))]) == 0
     assert capsys.readouterr().out == "### Added\n\n- The first release.\n"

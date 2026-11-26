@@ -67,7 +67,8 @@ clone too shallow for the range) exits 2 with the reason instead of a traceback.
 Not a checker but a release helper, run by `release.yml`. `release_notes.py <tag>` fails unless the
 tag is `v` plus the version in `pyproject.toml` and `CHANGELOG.md` has a `## [<version>]` entry; a
 pre-release without one (a `.devN` rehearsal) gets the `## [Unreleased]` section. It prints the
-entry, which becomes the GitHub Release notes. `--is-prerelease` only answers through its exit code.
+entry, which becomes the GitHub Release notes. Without a tag it checks the current version, as
+`ci-build` does on every pull request. `--is-prerelease` only answers through its exit code.
 
 ## verify.py
 
