@@ -43,6 +43,18 @@ repos:
         types_or: [python, pyi, toml]
         pass_filenames: false
         require_serial: true
+      - id: actionlint
+        name: actionlint
+        entry: uv run --frozen actionlint
+        language: system
+        files: ^\.github/workflows/
+        pass_filenames: false
+      - id: zizmor
+        name: zizmor (workflow security, offline audits)
+        entry: uv run --frozen zizmor --offline --min-severity low .github/workflows
+        language: system
+        files: ^(\.github/|zizmor\.yml$)
+        pass_filenames: false
       - id: check-conventions
         name: check conventions (C1-C7)
         entry: uv run --frozen python tools/check_conventions.py

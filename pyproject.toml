@@ -51,6 +51,8 @@ lint = [
     "ruff>=0.17",
     "mypy>=2.4",
     "pre-commit>=4.3",
+    "actionlint-py>=1.7.12",
+    "zizmor>=1.33",
 ]
 docs = [
     "sphinx>=9.2; python_full_version >= '3.13'",

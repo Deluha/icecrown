@@ -36,5 +36,9 @@ jobs:
         run: uv sync --frozen
       - name: Run every hook on all files
         run: uv run --frozen pre-commit run --all-files --show-diff-on-failure
+      - name: Audit the workflows online (known-vulnerable and impostor actions)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: uv run --frozen zizmor --min-severity low --format github .github/workflows
       - name: Scan the full history for secrets
         run: uv run --frozen pre-commit run gitleaks-history --hook-stage manual --all-files

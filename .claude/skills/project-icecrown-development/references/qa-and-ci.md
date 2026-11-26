@@ -27,7 +27,7 @@ them. A contributor needs nothing else; CI runs the same gates.
 | Tests and coverage | pytest, coverage | — | yes | `ci-tests` |
 | Build and wheel tests | `uv build`, `twine check --strict` | — | — | `ci-build` |
 | Docs build | Sphinx, warnings as errors | — | — | `ci-docs` |
-| Workflow lint | actionlint, zizmor | — | — | `ci-workflow-lint` |
+| Workflow lint | actionlint, zizmor (offline) | pre-commit | — | `ci-pre-commit` (zizmor also online) |
 
 ## Tests
 
@@ -65,12 +65,11 @@ at the top of each workflow.
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `ci-pre-commit.yml` | pull request, push to `main` | Every pre-commit hook on all files |
+| `ci-pre-commit.yml` | pull request, push to `main` | Every pre-commit hook on all files, zizmor's online audits, the full-history secret scan |
 | `ci-docs-sync.yml` | pull request | `check_docs_sync.py` over the pull request's commits |
 | `ci-tests.yml` | pull request, push to `main` | The support matrix, the bound jobs, combined coverage, and `CI gate`, which fails unless the matrix, the lowest-bound job and coverage succeeded |
 | `ci-build.yml` | pull request, push to `main` | sdist and wheel, `twine check --strict`, tests against the installed wheel on 3.11 and 3.15 |
 | `ci-docs.yml` | pull request, push to `main` | The documentation site, warnings as errors |
-| `ci-workflow-lint.yml` | pull request touching `.github/` | actionlint and zizmor |
 | `codeql.yml` | pull request, push to `main`, weekly | CodeQL code scanning (Python and Actions) |
 | `dependency-review.yml` | pull request | Blocks a dependency with a known vulnerability |
 | `scorecard.yml` | push to `main`, weekly | OpenSSF Scorecard |
@@ -86,3 +85,31 @@ at the top of each workflow.
 - **Claude Code hooks** (`.claude/hooks/`): `session-start.sh` syncs the environment and installs
   the git hooks in cloud sessions (skip with `ICECROWN_SKIP_DEV_SETUP=1`); `post_edit_check.py`
   runs `ruff check` on a Python file after an edit and reports a failure back to the session.
+
+## Supply chain
+
+- Every action is pinned to a full commit hash with its tag in a comment; zizmor fails an unpinned
+  one. Hook repositories in `.pre-commit-config.yaml` are pinned the same way
+  (`pre-commit autoupdate --freeze`).
+- Each workflow declares least-privilege token permissions at the top (`contents: read`, or
+  `read-all` for Scorecard); a job that needs more asks for it itself. Checkouts never persist
+  credentials.
+- Development tools (ruff, mypy, pre-commit, actionlint, zizmor) are pinned by `uv.lock`; the hooks
+  run them through `uv run --frozen`.
+- Dependabot proposes weekly, grouped updates for actions and `uv.lock`, each release aged seven
+  days first. Dependency review blocks a pull request that adds a known vulnerability or a
+  GPL / AGPL dependency.
+- CodeQL scans Python and the workflows; Scorecard publishes the project's posture weekly.
+
+## Repository settings
+
+Applied by the owner in the repository settings; the files are the source of truth.
+
+- **Rulesets**: import `.github/rulesets/main.json` (pull request required with no required
+  approval, conversations resolved, the required checks, no force-push or deletion on `main`) and
+  `.github/rulesets/release-tags.json` (only repository admins create `v*` tags; none is moved or
+  deleted). A renamed job is a renamed check: update `main.json` with it.
+- **Code owners**: `.github/CODEOWNERS`.
+- **Security**: private vulnerability reporting, Dependabot alerts and code scanning turned on.
+- **Environments**: `testpypi` and `pypi`, each with the owner as required reviewer and deployment
+  restricted to `v*` tags ([releasing.md](workflows/releasing.md)).
