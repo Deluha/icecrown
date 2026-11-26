@@ -56,6 +56,13 @@ the check for that commit's files only.
 | `--range <base>..<head>` | every commit in the range | `ci-docs-sync` |
 | `--base <ref>` | the commits since the merge base with `<ref>`, plus uncommitted and untracked files | `verify` (against `origin/main`, else `main`; skipped if neither exists) |
 
+## release_notes.py
+
+Not a checker but a release helper, run by `release.yml`. `release_notes.py <tag>` fails unless the
+tag is `v` plus the version in `pyproject.toml` and `CHANGELOG.md` has a `## [<version>]` entry; a
+pre-release without one (a `.devN` rehearsal) gets the `## [Unreleased]` section. It prints the
+entry, which becomes the GitHub Release notes. `--is-prerelease` only answers through its exit code.
+
 ## verify.py
 
 Runs, in order: the three checkers, `ruff check`, `ruff format --check`, `mypy`, and

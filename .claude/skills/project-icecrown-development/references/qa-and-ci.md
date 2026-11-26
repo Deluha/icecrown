@@ -73,7 +73,7 @@ at the top of each workflow.
 | `codeql.yml` | pull request, push to `main`, weekly | CodeQL code scanning (Python and Actions) |
 | `dependency-review.yml` | pull request | Blocks a dependency with a known vulnerability |
 | `scorecard.yml` | push to `main`, weekly | OpenSSF Scorecard |
-| `release.yml` | tag `v*` | Build, attest, publish behind an approval gate, GitHub Release |
+| `release.yml` | tag `v*` | Build and attest once, TestPyPI then PyPI behind approval gates, GitHub Release |
 
 ## Hooks
 

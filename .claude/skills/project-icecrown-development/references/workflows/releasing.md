@@ -6,11 +6,25 @@ The pipeline is `.github/workflows/release.yml` ([qa-and-ci.md](../qa-and-ci.md#
 1. **Ask first**: the version, the changelog entry, and go / no-go.
 2. In a pull request: set the version in `pyproject.toml` (its only home), move the "Unreleased"
    changelog entries under the new version with today's date, and update the roadmap's status row.
-3. After the merge, the owner tags the merge commit: `git tag -s vX.Y.Z` and pushes the tag.
-4. The workflow builds the sdist and wheel once, checks that the tag matches the package version,
-   and attests the build.
-5. The job pauses at the approval gate of its environment (`testpypi` for a `.devN` rehearsal, then
-   `pypi`); the owner approves.
-6. Trusted publishing uploads the files with their attestations; the GitHub Release is created from
-   the changelog entry.
-7. Check the release page and install the published version in a clean environment.
+   A `.devN` rehearsal needs no entry of its own; its notes are the "Unreleased" section.
+3. After the merge, the owner tags the merge commit (`git tag vX.Y.Z`, signed with `-s` where a
+   signing key is set up) and pushes the tag. Only repository admins can create `v*` tags.
+4. The `build and attest` job checks the tag against the version and the changelog
+   (`tools/release_notes.py`), builds the sdist and the wheel once, checks their metadata, and
+   attests them (SLSA build provenance).
+5. `publish to TestPyPI` waits at the `testpypi` environment's approval gate; the owner approves;
+   trusted publishing uploads the files with their PEP 740 attestations.
+6. The owner checks the TestPyPI page and a test install (`pip install -i
+   https://test.pypi.org/simple/ icecrown==X.Y.Z`), then approves `publish to PyPI` at the `pypi`
+   gate.
+7. The GitHub Release is created from the changelog entry, marked as a pre-release for `aN`, `bN`,
+   `rcN` and `.devN` versions, with the distributions attached.
+8. Check the release page and install the published version in a clean environment.
+
+## One-time setup (owner)
+
+- On PyPI and TestPyPI, add a pending trusted publisher for project `icecrown`: repository
+  `Deluha/icecrown`, workflow `release.yml`, environment `pypi` (PyPI) or `testpypi` (TestPyPI).
+  A pending publisher does not reserve the name; the first upload does.
+- In the repository settings, create the environments `testpypi` and `pypi` with the owner as
+  required reviewer and deployments limited to `v*` tags.
