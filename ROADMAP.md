@@ -117,7 +117,7 @@ Accepted as proposed (owner, 2026-11-25):
 
 | Phase | Status | Pull request |
 |---|---|---|
-| 0 — Light's Hammer: foundation and guidance | Not started | |
+| 0 — Light's Hammer: foundation and guidance | In review | [#2](https://github.com/Deluha/icecrown/pull/2) |
 | 1 — Frostmourne: soul capture and the Frozen Throne | Not started | |
 | 2 — Gunship Battle: sources, the command and the basic gate | Not started | |
 | 3 — Lord Marrowgar: findings and schema diff | Not started | |
