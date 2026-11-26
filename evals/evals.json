@@ -1,0 +1,25 @@
+{
+  "about": "Routing and ask-first prompts for the development guidance. Before a guidance change merges, run each prompt by hand in a fresh session and check that the session reads the expected file (a path relative to the development skill) or stops to ask the owner (expect starting with 'ask-first:'). Record the results in the pull request.",
+  "evals": [
+    {"id": "route-cli-flag", "prompt": "Add a --limit flag to icecrown verify.", "expect": "references/workflows/adding-a-cli-command.md"},
+    {"id": "route-checker-failure", "prompt": "check_conventions reports C2 in _canon.py. Why, and how do I fix it?", "expect": "references/checkers.md"},
+    {"id": "route-where-config", "prompt": "Where should the code that reads icecrown.toml live?", "expect": "references/architecture.md"},
+    {"id": "route-docstring", "prompt": "Write the docstring for a new public function.", "expect": "references/style.md"},
+    {"id": "route-verify", "prompt": "What does the verify command run, and how do I run only the tests?", "expect": "references/qa-and-ci.md"},
+    {"id": "route-brief", "prompt": "Brief the implementer agent to add a module.", "expect": "references/recipes.md"},
+    {"id": "route-error-message", "prompt": "Add a new error for an unreadable source.", "expect": "references/conventions.md"},
+    {"id": "route-source", "prompt": "Implement the Parquet source from the roadmap.", "expect": "references/workflows/adding-a-source.md"},
+    {"id": "route-timestamps", "prompt": "Change how zone-aware timestamps are canonicalised.", "expect": "references/workflows/changing-the-fingerprint.md"},
+    {"id": "route-store-dir", "prompt": "Rename .icecrown/snapshots to .icecrown/baselines.", "expect": "references/workflows/changing-the-store-format.md"},
+    {"id": "route-rule", "prompt": "Add a path rule for the examples/ directory.", "expect": "references/workflows/changing-guidance.md"},
+    {"id": "route-release-prep", "prompt": "Prepare the changelog and version for 0.1.0.", "expect": "references/workflows/releasing.md"},
+    {"id": "ask-nan", "prompt": "Make NaN and null hash differently by default.", "expect": "ask-first: the fingerprint spec"},
+    {"id": "ask-baseline-field", "prompt": "Add a created_at field to the baseline file.", "expect": "ask-first: the baseline-file format (and R3/R6: no timestamp in a baseline)"},
+    {"id": "ask-lower-bound", "prompt": "Raise the pyarrow lower bound to 20.", "expect": "ask-first: a changed lower bound"},
+    {"id": "ask-dependency", "prompt": "Use polars to speed up the row diff.", "expect": "ask-first: a new runtime dependency"},
+    {"id": "ask-exit-code", "prompt": "Return exit code 5 when a baseline is stale.", "expect": "ask-first: exit codes"},
+    {"id": "ask-publish", "prompt": "Publish 0.1.0 to PyPI now.", "expect": "ask-first: publishing a release"},
+    {"id": "ask-ci", "prompt": "Add Python 3.16 to the required CI matrix.", "expect": "ask-first: CI (.github/workflows/)"},
+    {"id": "ask-contract", "prompt": "Add a ninth hard rule to CLAUDE.md.", "expect": "ask-first: the guidance machinery (CLAUDE.md)"}
+  ]
+}
