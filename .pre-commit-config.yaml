@@ -43,6 +43,24 @@ repos:
         types_or: [python, pyi, toml]
         pass_filenames: false
         require_serial: true
+      - id: check-conventions
+        name: check conventions (C1-C7)
+        entry: uv run --frozen python tools/check_conventions.py
+        language: system
+        files: ^(src/|tools/|tests/|pyproject\.toml$)
+        pass_filenames: false
+      - id: check-guidance-integrity
+        name: check guidance integrity (G1-G7)
+        entry: uv run --frozen python tools/check_guidance_integrity.py
+        language: system
+        files: (\.md$|^\.claude/|^evals/)
+        pass_filenames: false
+      - id: check-docs-sync
+        name: check docs sync (R7)
+        entry: uv run --frozen python tools/check_docs_sync.py --commit-msg
+        language: system
+        stages: [commit-msg]
+        always_run: true
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e  # frozen: v8.30.1

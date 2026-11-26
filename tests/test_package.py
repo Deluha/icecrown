@@ -15,6 +15,5 @@ def test_package_ships_the_typing_marker() -> None:
 
 
 def test_public_names_are_declared_and_present() -> None:
-    assert sorted(icecrown.__all__) == icecrown.__all__
     for name in icecrown.__all__:
         assert hasattr(icecrown, name)

@@ -79,7 +79,9 @@ at the top of each workflow.
 ## Hooks
 
 - **Git hooks** (`.pre-commit-config.yaml`): the pre-commit stage runs file hygiene, ruff, mypy,
-  gitleaks and two checkers; the commit-msg stage runs docs sync. Python tools run from `uv.lock`
+  gitleaks, `check_conventions.py` (when package, tool or test files change) and
+  `check_guidance_integrity.py` (when Markdown, `.claude/` or `evals/` change); the commit-msg stage
+  runs `check_docs_sync.py --commit-msg` on every commit. Python tools run from `uv.lock`
   through `uv run --frozen`, so their versions never drift from CI.
 - **Claude Code hooks** (`.claude/hooks/`): `session-start.sh` syncs the environment and installs
   the git hooks in cloud sessions (skip with `ICECROWN_SKIP_DEV_SETUP=1`); `post_edit_check.py`

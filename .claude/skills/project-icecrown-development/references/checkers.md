@@ -46,10 +46,15 @@ Maps code areas to the doc that must change with them (R7):
 | `tools/` | this file |
 | `.github/workflows/`, `.pre-commit-config.yaml`, `.claude/hooks/` | [qa-and-ci.md](qa-and-ci.md) |
 
-Modes: `--commit-msg <file>` checks the staged files (the commit-msg hook); `--range <base>..<head>`
-checks the union of a range's changes (CI, and `verify` against the merge base with `main`). A line
-that is exactly `[skip-docs]` in a commit body waives the check for that commit, or, in a range, for
-the whole range.
+A doc changed anywhere in the checked set counts for the whole set, so code and its doc may land in
+different commits of one pull request. A line that is exactly `[skip-docs]` in a commit body waives
+the check for that commit's files only.
+
+| Mode | Checks | Used by |
+|---|---|---|
+| `--commit-msg <file>` | the staged files, with the message being written | the commit-msg hook |
+| `--range <base>..<head>` | every commit in the range | `ci-docs-sync` |
+| `--base <ref>` | the commits since the merge base with `<ref>`, plus uncommitted and untracked files | `verify` (against `origin/main`, else `main`; skipped if neither exists) |
 
 ## verify.py
 
