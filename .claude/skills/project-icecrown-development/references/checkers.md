@@ -56,6 +56,9 @@ the check for that commit's files only.
 | `--range <base>..<head>` | every commit in the range | `ci-docs-sync` |
 | `--base <ref>` | the commits since the merge base with `<ref>`, plus uncommitted and untracked files | `verify` (against `origin/main`, else `main`; skipped when neither has a merge base with `HEAD`, as in a shallow clone) |
 
+`ci-docs-sync` does not run on Dependabot's pull requests, which only move pins and the lockfile;
+a skipped required check counts as passed.
+
 Paths are read unquoted, so non-ASCII file names match their area. A git failure (an unknown ref, a
 clone too shallow for the range) exits 2 with the reason instead of a traceback.
 

@@ -3,7 +3,8 @@
 **Snapshot testing for tabular data.** Freeze the output of a data pipeline, verify it on every run or
 pull request, and see exactly which rows, columns and values moved when it changed.
 
-> **Status: in development.** Phase 0 (the foundation) is done; no product feature has shipped yet.
+> **Status: in development.** Phase 0 (the foundation) is in review; no product feature has shipped
+> yet.
 > The scope and the build order are in [`ROADMAP.md`](ROADMAP.md).
 
 ## What it does

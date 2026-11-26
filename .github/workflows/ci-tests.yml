@@ -111,7 +111,7 @@ jobs:
           allow-prereleases: true
       - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
       - name: Install the locked environment on the pre-release interpreter
-        run: uv sync --frozen --group test --python "$PYTHON"
+        run: uv sync --frozen --no-default-groups --group test --python "$PYTHON"
         env:
           PYTHON: ${{ steps.python.outputs.python-path }}
       - name: Run the tests

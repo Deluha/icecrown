@@ -23,10 +23,10 @@ linters, the type checker, the secret scan and the checkers on every commit.
 uv run python tools/verify.py
 ```
 
-It runs every gate a pull request needs — the convention, guidance and docs-sync checkers, `ruff`,
-`mypy` and the tests with branch coverage — and prints one pass/fail table. If it passes locally, CI
-will agree on everything but the platform matrix. `--list` names the steps and `--only <step>` runs
-one.
+It runs the convention, guidance and docs-sync checkers, `ruff`, `mypy` and the tests with branch
+coverage, and prints one pass/fail table. `--list` names the steps and `--only <step>` runs one. The
+git hooks add the file-hygiene checks and the secret scan; CI adds the platform matrix, the build,
+the docs build and workflow lint.
 
 ## Making a change
 

@@ -1,4 +1,5 @@
-# Release pipeline: a v* tag builds the distributions once, attests them, publishes to TestPyPI and
+# Release pipeline: a v* tag on a commit of main builds the distributions once (in a job without
+# an OIDC token), attests them, publishes to TestPyPI and
 # then PyPI (each behind its environment's approval gate) with trusted publishing, and creates the
 # GitHub Release from the changelog. See
 # .claude/skills/project-icecrown-development/references/workflows/releasing.md.
@@ -20,17 +21,18 @@ env:
 
 jobs:
   build:
-    name: build and attest
+    name: build
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
-      id-token: write
-      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Require the tagged commit to be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
       - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
         with:
           python-version: "3.15"
@@ -43,18 +45,32 @@ jobs:
         run: uv build
       - name: Check the distribution metadata
         run: uvx twine@7.0.0 check --strict dist/*
-      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6  # v4.2.2
-        with:
-          subject-path: dist/*
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: dist
           path: dist/
           if-no-files-found: error
 
+  attest:
+    name: attest
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6  # v4.2.2
+        with:
+          subject-path: dist/*
+
   testpypi:
     name: publish to TestPyPI
-    needs: build
+    needs: attest
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment:

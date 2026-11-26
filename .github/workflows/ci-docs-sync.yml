@@ -14,6 +14,9 @@ concurrency:
 jobs:
   docs-sync:
     name: docs sync
+    # Dependabot only moves pins and the lockfile, which have nothing to document; a skipped
+    # required check counts as passed.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

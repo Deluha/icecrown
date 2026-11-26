@@ -1,5 +1,5 @@
 {
-  "name": "release tags",
+  "name": "release tags: immutable",
   "target": "tag",
   "enforcement": "active",
   "conditions": {
@@ -8,11 +8,8 @@
       "exclude": []
     }
   },
-  "bypass_actors": [
-    { "actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always" }
-  ],
+  "bypass_actors": [],
   "rules": [
-    { "type": "creation" },
     { "type": "update" },
     { "type": "deletion" }
   ]

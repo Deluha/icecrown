@@ -9,9 +9,10 @@ The pipeline is `.github/workflows/release.yml` ([qa-and-ci.md](../qa-and-ci.md#
    A `.devN` rehearsal needs no entry of its own; its notes are the "Unreleased" section.
 3. After the merge, the owner tags the merge commit (`git tag vX.Y.Z`, signed with `-s` where a
    signing key is set up) and pushes the tag. Only repository admins can create `v*` tags.
-4. The `build and attest` job checks the tag against the version and the changelog
-   (`tools/release_notes.py`), builds the sdist and the wheel once, checks their metadata, and
-   attests them (SLSA build provenance).
+4. The `build` job refuses a tag whose commit is not on `main`, checks the tag against the version
+   and the changelog (`tools/release_notes.py`), builds the sdist and the wheel once and checks their
+   metadata; it holds no OIDC token. The `attest` job then attests the files (SLSA build
+   provenance).
 5. `publish to TestPyPI` waits at the `testpypi` environment's approval gate; the owner approves;
    trusted publishing uploads the files with their PEP 740 attestations.
 6. The owner checks the TestPyPI page and a test install (`pip install -i

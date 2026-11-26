@@ -4,4 +4,4 @@ paths:
 ---
 
 Checkers: what each one enforces is in [checkers.md](../skills/project-icecrown-development/references/checkers.md); change that file with the checker.
-The checkers are part of the guidance machinery: [changing-guidance.md](../skills/project-icecrown-development/references/workflows/changing-guidance.md).
+A checker enforces guidance, so a rule change follows the [lessons loop](../skills/project-icecrown-development/references/recipes.md#lessons-loop).

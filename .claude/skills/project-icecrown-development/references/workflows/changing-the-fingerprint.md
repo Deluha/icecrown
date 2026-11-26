@@ -7,8 +7,8 @@ the combination, a logical type — changes the fingerprint spec. It is an ask-f
    which existing baselines stop matching.
 2. Update the spec in `docs/reference/fingerprint-spec.md` *before* the code, with new test vectors.
 3. Bump the fingerprint-spec version in `_versions.py` (R1, R6).
-4. Change the code in the fingerprint path only (`_types.py`, `_canon.py`, `_fingerprint.py`,
-   `_soul.py`); keep it deterministic (R3, checker C2).
+4. Change the code in the [fingerprint path](../architecture.md#module-map) only; keep it
+   deterministic (R3, checker C2).
 5. Update the test vectors and the golden fingerprints; never edit a golden value without the spec
    change that explains it.
 6. From the 0.1.0 tag on: a baseline written under the old spec gives a clear "freeze again" error,
