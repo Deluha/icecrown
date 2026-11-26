@@ -43,7 +43,8 @@ NETWORK_MODULES = frozenset(
         "urllib3",
     }
 )
-ALWAYS_PUBLIC = frozenset({"__init__.py", "__main__.py", "py.typed"})
+ALWAYS_PUBLIC = frozenset({"__init__.py", "__main__.py"})
+STD_STREAMS = frozenset({"stdout", "stderr", "__stdout__", "__stderr__"})
 ENTRY_POINT_MAX_LINES = 40
 MAX_REEXPORT_DEPTH = 3
 TEST_FILE_PATTERNS = ("test_*.py", "*_test.py", "conftest.py")
@@ -61,7 +62,7 @@ def check(root: Path) -> list[Violation]:
         violations += check_determinism(rel, inner, tree)
         violations += check_network(rel, tree)
         violations += check_versions(rel, inner, tree)
-        if len(inner.parts) == 1 and inner.stem in entry_points:
+        if Path(inner.parts[0]).stem in entry_points:
             violations += check_entry_point_length(rel, tree)
     violations += check_public_modules(root, entry_points)
     violations += check_test_locations(list_files(root))
@@ -110,6 +111,13 @@ def check_output(rel: str, inner: Path, tree: ast.AST) -> list[Violation]:
     """C1: console output only through the message helpers."""
     if inner.as_posix() == MESSAGES_MODULE:
         return []
+    sys_names = {"sys"} | {
+        alias.asname
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+        if alias.name == "sys" and alias.asname
+    }
     found = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
@@ -118,22 +126,22 @@ def check_output(rel: str, inner: Path, tree: ast.AST) -> list[Violation]:
         elif (
             isinstance(node, ast.Attribute)
             and isinstance(node.value, ast.Name)
-            and node.value.id == "sys"
-            and node.attr in {"stdout", "stderr"}
+            and node.value.id in sys_names
+            and node.attr in STD_STREAMS
         ):
             found.append(Violation(rel, node.lineno, "C1", f"sys.{node.attr} outside the helpers"))
         elif isinstance(node, ast.ImportFrom) and node.module == "sys":
             found.extend(
                 Violation(rel, node.lineno, "C1", f"sys.{alias.name} outside the helpers")
                 for alias in node.names
-                if alias.name in {"stdout", "stderr"}
+                if alias.name in STD_STREAMS
             )
     return found
 
 
 def check_determinism(rel: str, inner: Path, tree: ast.AST) -> list[Violation]:
     """C2: nothing non-deterministic in a fingerprint-path module."""
-    if inner.as_posix() not in FINGERPRINT_PATH:
+    if f"{Path(inner.parts[0]).stem}.py" not in FINGERPRINT_PATH:
         return []
     found = [
         Violation(rel, line, "C2", f"import of {module!r} in the fingerprint path")
@@ -165,18 +173,33 @@ def check_versions(rel: str, inner: Path, tree: ast.Module) -> list[Violation]:
     if inner.as_posix() == VERSIONS_MODULE:
         return []
     found: list[Violation] = []
-    for node in tree.body:
+    for node in _module_level(tree.body):
         targets: list[ast.expr] = []
         if isinstance(node, ast.Assign):
             targets = node.targets
-        elif isinstance(node, ast.AnnAssign):
+        elif isinstance(node, ast.AnnAssign | ast.AugAssign):
             targets = [node.target]
         found.extend(
-            Violation(rel, node.lineno, "C6", f"{target.id} assigned outside {VERSIONS_MODULE}")
+            Violation(rel, node.lineno, "C6", f"{name.id} assigned outside {VERSIONS_MODULE}")
             for target in targets
-            if isinstance(target, ast.Name) and target.id.endswith("_VERSION")
+            for name in ast.walk(target)
+            if isinstance(name, ast.Name) and name.id.endswith("_VERSION")
         )
     return found
+
+
+def _module_level(body: Sequence[ast.stmt]) -> Iterator[ast.stmt]:
+    """Yield the statements that run at module level, descending into if, try and with blocks."""
+    for node in body:
+        yield node
+        if isinstance(node, ast.If | ast.With):
+            yield from _module_level(node.body)
+            yield from _module_level(getattr(node, "orelse", []))
+        elif isinstance(node, ast.Try | ast.TryStar):
+            for block in (node.body, node.orelse, node.finalbody):
+                yield from _module_level(block)
+            for handler in node.handlers:
+                yield from _module_level(handler.body)
 
 
 def check_entry_point_length(rel: str, tree: ast.AST) -> list[Violation]:
@@ -208,7 +231,7 @@ def check_public_modules(root: Path, entry_points: frozenset[str]) -> list[Viola
             continue
         if child.is_dir() and not any(child.glob("*.py")):
             continue
-        if child.suffix == ".py" and child.stem in entry_points:
+        if child.stem in entry_points and (child.suffix == ".py" or child.is_dir()):
             continue
         if child.is_file() and child.suffix != ".py":
             continue
@@ -280,6 +303,10 @@ def _has_docstring(root: Path, tree: ast.Module, name: str, depth: int) -> bool 
                     and isinstance(following.value, ast.Constant)
                     and isinstance(following.value.value, str)
                 )
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if (alias.asname or alias.name.split(".")[0]) == name:
+                    return True  # a module: its own docstring is checked where it is defined
         elif isinstance(node, ast.ImportFrom) and node.module and depth < MAX_REEXPORT_DEPTH:
             for alias in node.names:
                 if (alias.asname or alias.name) == name:

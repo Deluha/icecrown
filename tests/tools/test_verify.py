@@ -31,6 +31,10 @@ def test_docs_sync_is_skipped_without_a_base_ref() -> None:
     assert verify.run_step(step, Path()).status == "skip"
 
 
+def test_no_base_ref_outside_a_checkout(tmp_path: Path) -> None:
+    assert verify.base_ref(tmp_path) is None
+
+
 def test_a_step_stops_at_its_first_failing_command() -> None:
     calls: list[str] = []
 

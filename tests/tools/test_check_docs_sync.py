@@ -121,6 +121,18 @@ def test_commit_msg_mode(repo: Path, tmp_path_factory: pytest.TempPathFactory) -
     assert ds.main(["--root", str(repo), "--commit-msg", str(message)]) == 0
 
 
+def test_non_ascii_paths_are_matched(repo: Path) -> None:
+    commit(repo, "src/icecrown/_données.py", "Add code")
+    assert ds.main(["--root", str(repo), "--range", "main..work"]) == 1
+
+
+def test_an_unknown_ref_is_reported_not_raised(
+    repo: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert ds.main(["--root", str(repo), "--base", "no-such-ref"]) == 2
+    assert "git failed" in capsys.readouterr().out
+
+
 def test_malformed_range_is_a_usage_error(repo: Path) -> None:
     with pytest.raises(SystemExit) as exc:
         ds.main(["--root", str(repo), "--range", "main"])

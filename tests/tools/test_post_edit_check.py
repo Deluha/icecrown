@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -47,3 +48,41 @@ def test_other_files_are_ignored(hook: ModuleType, tmp_path: Path) -> None:
     assert hook.file_to_check(payload(str(tmp_path / "missing.py")), tmp_path) is None
     assert hook.file_to_check(payload(str(outside)), tmp_path) is None
     assert hook.file_to_check(payload(None), tmp_path) is None
+
+
+class FakeResult:
+    def __init__(self, returncode: int) -> None:
+        self.returncode = returncode
+        self.stdout = "F401 unused import\n"
+        self.stderr = ""
+
+
+@pytest.mark.parametrize(("ruff_exit", "hook_exit"), [(0, 0), (1, 2), (2, 0)])
+def test_main_blocks_only_on_ruff_findings(
+    hook: ModuleType,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    ruff_exit: int,
+    hook_exit: int,
+) -> None:
+    target = tmp_path / "x.py"
+    target.write_text("import os\n", encoding="utf-8")
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setattr("sys.stdin", io.StringIO(payload(str(target))))
+    monkeypatch.setattr(hook.shutil, "which", lambda _: "uv")
+    monkeypatch.setattr(hook.subprocess, "run", lambda *_a, **_k: FakeResult(ruff_exit))
+    assert hook.main() == hook_exit
+    err = capsys.readouterr().err
+    assert ("F401" in err) is (hook_exit == hook.BLOCKING_EXIT)
+
+
+def test_main_without_uv_does_nothing(
+    hook: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = tmp_path / "x.py"
+    target.write_text("", encoding="utf-8")
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setattr("sys.stdin", io.StringIO(payload(str(target))))
+    monkeypatch.setattr(hook.shutil, "which", lambda _: None)
+    assert hook.main() == 0

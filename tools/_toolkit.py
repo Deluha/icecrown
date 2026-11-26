@@ -16,7 +16,9 @@ Frontmatter = dict[str, str | list[str]]
 _LINK = re.compile(r"(?<!!)\[(?:[^\]\\]|\\.)*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 _INLINE_CODE = re.compile(r"`[^`]*`")
 _HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
-_FENCE = re.compile(r"^\s*(```|~~~)")
+_FENCE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+_LINK_TEXT = re.compile(r"!?\[((?:[^\]\\]|\\.)*)\]\([^)]*\)")
+_SKIPPED_DIRS = frozenset({".git", ".venv", "build", "dist", "node_modules", "__pycache__"})
 _SLUG_DROP = re.compile(r"[^\w\- ]", re.UNICODE)
 _TABLE_HEADER_LINES = 2  # the header row and the separator row
 
@@ -54,7 +56,11 @@ def list_files(root: Path) -> list[str]:
             check=True,
         ).stdout.decode()
         return sorted({p for p in out.split("\0") if p and (root / p).is_file()})
-    return sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file())
+    return sorted(
+        p.relative_to(root).as_posix()
+        for p in root.rglob("*")
+        if p.is_file() and not _SKIPPED_DIRS.intersection(p.relative_to(root).parts[:-1])
+    )
 
 
 def report(violations: Iterable[Violation], name: str) -> int:
@@ -74,13 +80,18 @@ def markdown_lines(text: str, *, keep_inline_code: bool = False) -> Iterator[tup
 
     Inline code spans are removed unless ``keep_inline_code`` is set.
     """
-    in_fence = False
+    fence: str | None = None  # the opening fence, while inside a fenced block
     for number, line in enumerate(text.splitlines(), start=1):
-        if _FENCE.match(line):
-            in_fence = not in_fence
+        match = _FENCE.match(line)
+        if fence is None and match:
+            fence = match.group(1)
             continue
-        if not in_fence:
-            yield number, line if keep_inline_code else _INLINE_CODE.sub("", line)
+        if fence is not None:
+            closing = line.strip()
+            if closing and set(closing) == {fence[0]} and len(closing) >= len(fence):
+                fence = None
+            continue
+        yield number, line if keep_inline_code else _INLINE_CODE.sub("", line)
 
 
 def iter_links(text: str) -> Iterator[tuple[int, str]]:
@@ -94,11 +105,12 @@ def heading_slugs(text: str) -> set[str]:
     """Return the GitHub-style anchor of every heading, with ``-1``, ``-2`` for repeats."""
     slugs: set[str] = set()
     counts: dict[str, int] = {}
-    for _, line in markdown_lines(text):
+    for _, line in markdown_lines(text, keep_inline_code=True):
         match = _HEADING.match(line)
         if not match:
             continue
-        base = _SLUG_DROP.sub("", match.group(2).strip().lower()).replace(" ", "-")
+        title = _LINK_TEXT.sub(r"\1", match.group(2)).replace("`", "")
+        base = _SLUG_DROP.sub("", title.strip().lower()).replace(" ", "-")
         seen = counts.get(base, 0)
         counts[base] = seen + 1
         slugs.add(base if seen == 0 else f"{base}-{seen}")

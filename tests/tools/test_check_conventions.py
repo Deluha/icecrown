@@ -73,6 +73,13 @@ def test_c1_print_and_std_streams_outside_messages(tmp_path: Path) -> None:
     assert codes(root) == ["C1:src/icecrown/_a.py"] * 2 + ["C1:src/icecrown/_b.py"]
 
 
+def test_c1_sees_through_aliases_and_original_streams(tmp_path: Path) -> None:
+    root = make_repo(
+        tmp_path, {"src/icecrown/_a.py": "import sys as s\ns.stdout.write('x')\nsys.__stderr__\n"}
+    )
+    assert codes(root) == ["C1:src/icecrown/_a.py"] * 2
+
+
 @pytest.mark.parametrize(
     "source",
     [
@@ -87,6 +94,11 @@ def test_c1_print_and_std_streams_outside_messages(tmp_path: Path) -> None:
 def test_c2_nondeterminism_in_the_fingerprint_path(tmp_path: Path, source: str) -> None:
     root = make_repo(tmp_path, {"src/icecrown/_canon.py": source})
     assert codes(root) == ["C2:src/icecrown/_canon.py"]
+
+
+def test_c2_covers_a_fingerprint_subpackage(tmp_path: Path) -> None:
+    root = make_repo(tmp_path, {"src/icecrown/_canon/helpers.py": "import time\n"})
+    assert codes(root) == ["C2:src/icecrown/_canon/helpers.py"]
 
 
 def test_c2_applies_only_to_the_fingerprint_path(tmp_path: Path) -> None:
@@ -141,6 +153,19 @@ def test_c4_entry_point_functions_stay_short(tmp_path: Path) -> None:
     assert codes(root) == ["C4:src/icecrown/__main__.py"]
 
 
+def test_c4_entry_point_packages(tmp_path: Path) -> None:
+    long_body = "".join(f"    x{i} = {i}\n" for i in range(cc.ENTRY_POINT_MAX_LINES))
+    pyproject = PYPROJECT.replace("icecrown.__main__:main", "icecrown.cli:main")
+    root = make_repo(
+        tmp_path,
+        {
+            "pyproject.toml": pyproject,
+            "src/icecrown/cli/__init__.py": f"def main() -> None:\n{long_body}",
+        },
+    )
+    assert [v.message.split(" is ")[0] for v in cc.check(root)] == ["entry-point function main()"]
+
+
 def test_c5_test_files_outside_tests(tmp_path: Path) -> None:
     root = make_repo(tmp_path, {"tools/test_tool.py": "", "conftest.py": "", "src/a_test.py": ""})
     assert sorted(codes(root)) == ["C5:conftest.py", "C5:src/a_test.py", "C5:tools/test_tool.py"]
@@ -152,9 +177,19 @@ def test_c6_version_constants_only_in_the_registry(tmp_path: Path) -> None:
         {
             "src/icecrown/_versions.py": "STORE_FORMAT_VERSION = 1\n",
             "src/icecrown/_store.py": "SPEC_VERSION: int = 1\n__version__ = 'x'\n",
+            "src/icecrown/_other.py": (
+                "A_VERSION, B = 1, 2\nif True:\n    C_VERSION = 3\n"
+                "try:\n    pass\nexcept ImportError:\n    D_VERSION = 4\n"
+                "def f() -> None:\n    LOCAL_VERSION = 5\n"
+            ),
         },
     )
-    assert codes(root) == ["C6:src/icecrown/_store.py"]
+    assert sorted(v.message.split()[0] for v in cc.check(root)) == [
+        "A_VERSION",
+        "C_VERSION",
+        "D_VERSION",
+        "SPEC_VERSION",
+    ]
 
 
 def test_c7_missing_all(tmp_path: Path) -> None:
@@ -181,6 +216,14 @@ def test_c7_undefined_and_undocumented_names(tmp_path: Path) -> None:
         "'freeze' has no docstring",
         "'ghost' is in __all__ but not defined",
     ]
+
+
+def test_c7_accepts_an_imported_module(tmp_path: Path) -> None:
+    init = (
+        INIT.replace('"freeze"]', '"freeze", "sources"]') + "import icecrown._sources as sources\n"
+    )
+    root = make_repo(tmp_path, {"src/icecrown/__init__.py": init})
+    assert cc.check(root) == []
 
 
 def test_entry_points_are_read_from_pyproject(tmp_path: Path) -> None:

@@ -36,6 +36,9 @@ def make_tree(tmp_path: Path, files: dict[str, str] | None = None) -> Path:
         f"{SKILL}/references/recipes.md": ROLES,
         ".claude/agents/implementer.md": AGENT,
         ".claude/settings.json": json.dumps({"model": "opus", "effortLevel": "high"}),
+        "evals/evals.json": json.dumps(
+            {"evals": [{"id": "r", "prompt": "p", "expect": "references/recipes.md"}]}
+        ),
     }
     for rel, text in {**base, **(files or {})}.items():
         path = tmp_path / rel
@@ -75,6 +78,11 @@ def test_g2_contract_budget(tmp_path: Path) -> None:
     assert codes(root) == ["G2:CLAUDE.md"]
 
 
+def test_g2_counts_a_last_line_without_newline(tmp_path: Path) -> None:
+    text = "line\n" * gi.CONTRACT_MAX_LINES + "one more"
+    assert codes(make_tree(tmp_path, {"CLAUDE.md": text})) == ["G2:CLAUDE.md"]
+
+
 def test_g2_missing_contract(tmp_path: Path) -> None:
     root = make_tree(tmp_path)
     (root / "CLAUDE.md").unlink()
@@ -97,6 +105,20 @@ def test_g3_every_reference_has_exactly_one_row(tmp_path: Path) -> None:
         "no routing row for references/workflows/unrouted.md",
         "references/recipes.md is routed by 2 rows",
     ]
+
+
+def test_g3_links_outside_the_skill_are_not_routes(tmp_path: Path) -> None:
+    root = make_tree(
+        tmp_path,
+        {
+            "docs/index.md": "# Docs\n",
+            f"{SKILL}/SKILL.md": (
+                "| Task | Read |\n|---|---|\n| A | [r](references/recipes.md) |\n"
+                "| Product facts | [docs](../../../docs/index.md) |\n"
+            ),
+        },
+    )
+    assert gi.check(root) == []
 
 
 def test_g4_rules_need_paths_and_pointer_only_bodies(tmp_path: Path) -> None:
@@ -163,14 +185,35 @@ def test_g7_evals(tmp_path: Path) -> None:
             {"id": "b", "prompt": "p", "expect": "ask-first: publishing"},
             {"id": "a", "prompt": "p", "expect": "references/nowhere.md"},
             {"id": "c", "prompt": "p"},
+            {"id": "d", "prompt": "p", "expect": "SKILL.md"},
+            {"id": "e", "prompt": "p", "expect": "/etc/hostname"},
+            {"id": "f", "prompt": "p", "expect": "ask-first:  "},
         ]
     }
     root = make_tree(tmp_path, {"evals/evals.json": json.dumps(evals)})
     messages = sorted(v.message for v in gi.check(root))
     assert messages == [
         "a: unknown route 'references/nowhere.md'",
+        "d: unknown route 'SKILL.md'",
         "duplicate eval id 'a'",
+        "e: unknown route '/etc/hostname'",
         "eval #3 needs string id, prompt, expect",
+        "f: name the ask-first item",
+    ]
+
+
+def test_g7_missing_evals_file(tmp_path: Path) -> None:
+    root = make_tree(tmp_path)
+    (root / "evals/evals.json").unlink()
+    assert [v.message for v in gi.check(root)] == ["the evals file is missing"]
+
+
+def test_g6_malformed_settings(tmp_path: Path) -> None:
+    assert codes(make_tree(tmp_path, {".claude/settings.json": "{"})) == [
+        "G6:.claude/settings.json"
+    ]
+    assert codes(make_tree(tmp_path, {".claude/settings.json": "[]"})) == [
+        "G6:.claude/settings.json"
     ]
 
 

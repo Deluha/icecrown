@@ -40,7 +40,6 @@ AGENT_KEYS = ("name", "description", "tools", "model", "effort")
 EVALS_FILE = "evals/evals.json"
 ASK_FIRST_PREFIX = "ask-first:"
 EXTERNAL = re.compile(r"^[a-z][a-z0-9+.-]*:", re.IGNORECASE)
-LINK = re.compile(r"\[[^\]]*\]\([^)]+\)")
 CODE = re.compile(r"`([^`]+)`")
 
 
@@ -95,7 +94,7 @@ def check_contract_budget(root: Path) -> list[Violation]:
     if not path.is_file():
         return [Violation(CONTRACT, 1, "G2", "the operating contract is missing")]
     data = path.read_bytes()
-    lines = data.decode("utf-8").count("\n")
+    lines = len(data.decode("utf-8").splitlines())
     found = []
     if lines > CONTRACT_MAX_LINES:
         found.append(Violation(CONTRACT, 1, "G2", f"{lines} lines (at most {CONTRACT_MAX_LINES})"))
@@ -118,7 +117,9 @@ def check_routing_table(root: Path) -> list[Violation]:
             if not EXTERNAL.match(target)
         }
         for target in targets:
-            rows.setdefault(target.relative_to(skill.parent.resolve()).as_posix(), []).append(line)
+            if target.is_relative_to(skill.parent.resolve()):
+                name = target.relative_to(skill.parent.resolve()).as_posix()
+                rows.setdefault(name, []).append(line)
     references = skill.parent / "references"
     expected = (
         {p.relative_to(skill.parent).as_posix() for p in references.rglob("*.md")}
@@ -173,7 +174,7 @@ def _pointer_body(rel: str, body: Sequence[tuple[int, str]], code: str) -> list[
     found += [
         Violation(rel, number, code, "body line holds no link (pointer-only)")
         for number, text in lines
-        if not LINK.search(text)
+        if not any(True for _ in iter_links(text))
     ]
     return found
 
@@ -221,7 +222,12 @@ def check_agents(root: Path) -> list[Violation]:
     ]
     settings = root / ".claude" / "settings.json"
     if settings.is_file() and SESSION_AGENT in table:
-        data = json.loads(settings.read_text(encoding="utf-8"))
+        try:
+            data = json.loads(settings.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as err:
+            return [*found, Violation(".claude/settings.json", err.lineno, "G6", "invalid JSON")]
+        if not isinstance(data, dict):
+            return [*found, Violation(".claude/settings.json", 1, "G6", "expected an object")]
         model, effort = data.get("model"), data.get("effortLevel")
         found += _compare_role(".claude/settings.json", SESSION_AGENT, model, effort, table)
     return found
@@ -248,11 +254,26 @@ def _compare_role(
     return found
 
 
+def routed_references(root: Path) -> set[str]:
+    """Return the reference files the routing table routes to, relative to the skill directory."""
+    skill = root / SKILL_DIR / "SKILL.md"
+    if not skill.is_file():
+        return set()
+    base = skill.parent.resolve()
+    routed = set()
+    for _, cells in table_rows(skill.read_text(encoding="utf-8")):
+        for _, target in iter_links(" | ".join(cells)):
+            dest = (skill.parent / target.partition("#")[0]).resolve()
+            if not EXTERNAL.match(target) and dest.is_relative_to(base / "references"):
+                routed.add(dest.relative_to(base).as_posix())
+    return routed
+
+
 def check_evals(root: Path) -> list[Violation]:
-    """G7: the routing and ask-first evals parse and name a real route."""
+    """G7: the routing and ask-first evals parse and name a routed file or an ask-first item."""
     path = root / EVALS_FILE
     if not path.is_file():
-        return []
+        return [Violation(EVALS_FILE, 1, "G7", "the evals file is missing")]
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as err:
@@ -260,20 +281,27 @@ def check_evals(root: Path) -> list[Violation]:
     evals = data.get("evals") if isinstance(data, dict) else None
     if not isinstance(evals, list) or not evals:
         return [Violation(EVALS_FILE, 1, "G7", "expected a non-empty 'evals' list")]
+    routed = routed_references(root)
     found = []
     ids: set[str] = set()
     for index, item in enumerate(evals):
-        where = f"eval #{index}"
         if not isinstance(item, dict) or not all(
             isinstance(item.get(key), str) and item[key] for key in ("id", "prompt", "expect")
         ):
-            found.append(Violation(EVALS_FILE, 1, "G7", f"{where} needs string id, prompt, expect"))
+            found.append(
+                Violation(EVALS_FILE, 1, "G7", f"eval #{index} needs string id, prompt, expect")
+            )
             continue
         if item["id"] in ids:
             found.append(Violation(EVALS_FILE, 1, "G7", f"duplicate eval id {item['id']!r}"))
         ids.add(item["id"])
         expect = item["expect"]
-        if not expect.startswith(ASK_FIRST_PREFIX) and not (root / SKILL_DIR / expect).is_file():
+        if expect.startswith(ASK_FIRST_PREFIX):
+            if not expect.removeprefix(ASK_FIRST_PREFIX).strip():
+                found.append(
+                    Violation(EVALS_FILE, 1, "G7", f"{item['id']}: name the ask-first item")
+                )
+        elif expect not in routed:
             found.append(Violation(EVALS_FILE, 1, "G7", f"{item['id']}: unknown route {expect!r}"))
     return found
 

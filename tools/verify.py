@@ -13,6 +13,7 @@ import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from _toolkit import repo_root
 
@@ -34,7 +35,7 @@ class Outcome:
     """The result of one step."""
 
     name: str
-    status: str  # "pass", "FAIL" or "skip"
+    status: Literal["pass", "FAIL", "skip"]
     seconds: float
     output: str
 
@@ -95,9 +96,13 @@ def run_step(step: Step, root: Path, runner: Runner = run_command) -> Outcome:
 
 
 def base_ref(root: Path) -> str | None:
-    """Return the ref to compare against for docs sync, or None outside a usable checkout."""
+    """Return the ref to compare against for docs sync, or None if there is no usable merge base.
+
+    Outside a git checkout, without a ``main`` ref, or in a clone too shallow to hold the merge
+    base, the docs-sync row is skipped; CI checks it on every pull request.
+    """
     for ref in BASE_REFS:
-        code, _ = run_command(("git", "rev-parse", "--verify", "--quiet", ref), root)
+        code, _ = run_command(("git", "merge-base", ref, "HEAD"), root)
         if code == 0:
             return ref
     return None

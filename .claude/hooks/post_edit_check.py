@@ -2,7 +2,8 @@
 
 Reads the hook payload from stdin. For an edited ``.py`` file inside the project, it runs the
 locked ``ruff check`` on that file; on a finding it prints the report to stderr and exits 2, which
-Claude Code feeds back to the session. Anything else, or a missing ``uv``, exits 0 silently.
+Claude Code feeds back to the session. Any other file, a missing ``uv``, or a ruff that cannot run
+(an environment that is not synced yet) does not block.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ import sys
 from pathlib import Path
 
 BLOCKING_EXIT = 2
+RUFF_FOUND_PROBLEMS = 1  # ruff's exit code for findings; other codes mean it could not run
 
 
 def file_to_check(payload: str, project_dir: Path) -> Path | None:
@@ -41,13 +43,28 @@ def main() -> int:
     if path is None or uv is None:
         return 0
     result = subprocess.run(
-        [uv, "run", "--frozen", "ruff", "check", "--quiet", "--force-exclude", str(path)],
+        [
+            uv,
+            "run",
+            "--frozen",
+            "--no-sync",
+            "ruff",
+            "check",
+            "--quiet",
+            "--force-exclude",
+            str(path),
+        ],
         capture_output=True,
         text=True,
         check=False,
         cwd=project_dir,
     )
     if result.returncode == 0:
+        return 0
+    if result.returncode != RUFF_FOUND_PROBLEMS:
+        sys.stderr.write(
+            f"post_edit_check: could not run ruff ({result.stderr.strip()}); skipped\n"
+        )
         return 0
     sys.stderr.write(f"ruff check found problems in {path.name}:\n{result.stdout}{result.stderr}")
     return BLOCKING_EXIT

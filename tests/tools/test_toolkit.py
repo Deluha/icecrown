@@ -1,6 +1,15 @@
 """The shared checker helpers: Markdown, frontmatter and tables."""
 
-from _toolkit import Violation, heading_slugs, iter_links, split_frontmatter, table_rows
+from pathlib import Path
+
+from _toolkit import (
+    Violation,
+    heading_slugs,
+    iter_links,
+    list_files,
+    split_frontmatter,
+    table_rows,
+)
 
 
 def test_links_outside_code_are_found() -> None:
@@ -16,6 +25,26 @@ def test_heading_slugs_follow_github_rules() -> None:
         "hard-rules-1",
         "c1-print",
     }
+
+
+def test_heading_slugs_keep_code_and_link_text() -> None:
+    text = "## The `verify` command\n## Run [verify](x.md) now\n"
+    assert heading_slugs(text) == {"the-verify-command", "run-verify-now"}
+
+
+def test_a_fence_closes_only_on_its_own_kind() -> None:
+    text = (
+        "~~~\n```\n[hidden](a.md)\n~~~\n[seen](b.md)\n"
+        "````\n```\n[hidden](c.md)\n````\n[seen](d.md)\n"
+    )
+    assert [target for _, target in iter_links(text)] == ["b.md", "d.md"]
+
+
+def test_listing_without_git_skips_environments(tmp_path: Path) -> None:
+    for rel in ("a.py", ".venv/lib/test_x.py", "dist/x.whl", "src/b.py"):
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text("", encoding="utf-8")
+    assert list_files(tmp_path) == ["a.py", "src/b.py"]
 
 
 def test_headings_inside_code_fences_are_ignored() -> None:

@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 from _toolkit import repo_root
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Sequence
+    from collections.abc import Iterable, Sequence
 
 SKIP_MARKER = "[skip-docs]"
 REFERENCES = ".claude/skills/project-icecrown-development/references"
@@ -25,27 +25,24 @@ REFERENCES = ".claude/skills/project-icecrown-development/references"
 
 @dataclass(frozen=True)
 class Area:
-    """A documented code area and the doc that must change with it."""
+    """A documented code area and its doc: a file, or a directory ending in ``/``."""
 
     name: str
     prefixes: tuple[str, ...]
     doc: str
-    is_doc: Callable[[str], bool]
+
+    def is_doc(self, path: str) -> bool:
+        """Return whether ``path`` is this area's doc."""
+        return path.startswith(self.doc) if self.doc.endswith("/") else path == self.doc
 
 
 AREAS = (
-    Area("package code", ("src/icecrown/",), "docs/", lambda f: f.startswith("docs/")),
-    Area(
-        "checkers",
-        ("tools/",),
-        f"{REFERENCES}/checkers.md",
-        lambda f: f == f"{REFERENCES}/checkers.md",
-    ),
+    Area("package code", ("src/icecrown/",), "docs/"),
+    Area("checkers", ("tools/",), f"{REFERENCES}/checkers.md"),
     Area(
         "CI and hooks",
         (".github/workflows/", ".pre-commit-config.yaml", ".claude/hooks/"),
         f"{REFERENCES}/qa-and-ci.md",
-        lambda f: f == f"{REFERENCES}/qa-and-ci.md",
     ),
 )
 
@@ -69,7 +66,11 @@ def has_skip_marker(message: str) -> bool:
 
 def _git(root: Path, *args: str) -> str:
     return subprocess.run(
-        ["git", *args], cwd=root, capture_output=True, text=True, check=True
+        ["git", "-c", "core.quotePath=false", *args],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout
 
 
@@ -133,6 +134,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     mode.add_argument("--base", metavar="REF", help="check the work since the merge base with REF")
     args = parser.parse_args(argv)
     root: Path = args.root
+    try:
+        return _run(args, root, parser)
+    except subprocess.CalledProcessError as err:
+        print(
+            f"check_docs_sync: git failed ({' '.join(err.cmd[3:])}): {err.stderr.strip()}; "
+            "in a shallow clone, fetch more history (git fetch --unshallow)"
+        )
+        return 2
+
+
+def _run(args: argparse.Namespace, root: Path, parser: argparse.ArgumentParser) -> int:
     if args.commit_msg is not None:
         message = args.commit_msg.read_text(encoding="utf-8")
         return evaluate([(message, staged_files(root))])
