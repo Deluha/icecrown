@@ -33,6 +33,7 @@
           { "context": "pre-commit" },
           { "context": "docs sync" },
           { "context": "build" },
+          { "context": "docs build" },
           { "context": "tests against the wheel (3.11)" },
           { "context": "tests against the wheel (3.15)" },
           { "context": "analyze (python)" },

@@ -108,6 +108,7 @@ ban-relative-imports = "all"
 "tests/**" = ["D", "S101", "S603", "S607", "PLR2004", "SLF001", "FBT"]
 "tools/**" = ["T201", "S603", "S607"]
 ".claude/hooks/**" = ["S603"]
+"docs/conf.py" = ["A001"]
 
 [tool.ruff.format]
 line-ending = "lf"

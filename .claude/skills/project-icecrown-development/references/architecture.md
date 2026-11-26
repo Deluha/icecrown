@@ -52,4 +52,6 @@ The fingerprint path — the modules checker C2 guards — is `_types.py`, `_can
 
 Two independent versions live in `_versions.py` and are written into every baseline file: the
 store-format version and the fingerprint-spec version. Their published references are
-`docs/reference/store-format.md` and `docs/reference/fingerprint-spec.md`.
+[store-format.md](../../../../docs/reference/store-format.md) and
+[fingerprint-spec.md](../../../../docs/reference/fingerprint-spec.md); what users may rely on is in
+[compatibility.md](../../../../docs/compatibility.md).

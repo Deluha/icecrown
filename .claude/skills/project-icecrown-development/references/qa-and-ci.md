@@ -27,6 +27,11 @@ them. A contributor needs nothing else; CI runs the same gates.
 | Tests and coverage | pytest, coverage | — | yes | `ci-tests` |
 | Build and wheel tests | `uv build`, `twine check --strict` | — | — | `ci-build` |
 | Docs build | Sphinx, warnings as errors | — | — | `ci-docs` |
+
+Build the site locally with
+`uv run --group docs sphinx-build -W --keep-going -n -b html docs docs/_build/html` (Python 3.13 or
+newer). The source is Markdown (MyST); the API reference is generated from the docstrings of the
+names in `icecrown.__all__` by sphinx-autoapi.
 | Workflow lint | actionlint, zizmor (offline) | pre-commit | — | `ci-pre-commit` (zizmor also online) |
 
 ## Tests
