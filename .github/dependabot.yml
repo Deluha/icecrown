@@ -1,0 +1,32 @@
+# Weekly, grouped updates for the pinned actions and the locked Python environment. The cooldown
+# lets a new release age a week before it is proposed. Hook repositories in .pre-commit-config.yaml
+# are updated with `pre-commit autoupdate --freeze`.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "Update actions:"
+
+  - package-ecosystem: uv
+    directory: /
+    # Update uv.lock only: a changed lower bound in pyproject.toml is an ask-first item.
+    versioning-strategy: lockfile-only
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      development:
+        dependency-type: development
+      runtime:
+        dependency-type: production
+    commit-message:
+      prefix: "Update dependencies:"

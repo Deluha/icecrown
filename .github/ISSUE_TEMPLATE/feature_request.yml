@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest a capability or an improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        The planned scope is in ROADMAP.md; ideas for later releases are welcome. Changes to the
+        fingerprint specification, the store format, public signatures or dependencies need the owner's
+        decision before any code is written.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem it solves
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you propose
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered

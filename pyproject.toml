@@ -1,0 +1,164 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "icecrown"
+version = "0.1.0.dev0"
+description = "Snapshot testing for tabular data: freeze a dataset's fingerprint, verify it in CI, see what moved."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "The Project Icecrown authors" }]
+keywords = ["snapshot-testing", "data-testing", "arrow", "fingerprint", "pytest", "data-pipeline"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Database",
+    "Typing :: Typed",
+]
+dependencies = ["pyarrow>=18.0.0"]
+
+[project.optional-dependencies]
+pandas = ["pandas>=2.2.2"]
+sql = ["sqlalchemy>=2.0"]
+
+[project.urls]
+Homepage = "https://github.com/Deluha/icecrown"
+Source = "https://github.com/Deluha/icecrown"
+Issues = "https://github.com/Deluha/icecrown/issues"
+Changelog = "https://github.com/Deluha/icecrown/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+test = [
+    "pytest>=9.0",
+    "hypothesis>=6.150",
+    "coverage[toml]>=7.10",
+    "pytest-socket>=0.7",
+]
+lint = [
+    "ruff>=0.17",
+    "mypy>=2.4",
+    "pre-commit>=4.3",
+    "actionlint-py>=1.7.12",
+    "zizmor>=1.33",
+]
+docs = [
+    "sphinx>=9.2; python_full_version >= '3.13'",
+    "myst-parser>=5.0; python_full_version >= '3.13'",
+    "sphinx-autoapi>=3.9; python_full_version >= '3.13'",
+    "furo>=2025.12.19; python_full_version >= '3.13'",
+]
+dev = [
+    "icecrown[pandas,sql]",
+    { include-group = "test" },
+    { include-group = "lint" },
+]
+
+[tool.uv]
+default-groups = ["dev"]
+required-version = ">=0.13"
+build-constraint-dependencies = ["hatchling==1.33.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/icecrown"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.claude",
+    "/tools",
+    "/evals",
+    "/tests/tools",
+    "/CLAUDE.md",
+    "/.github",
+    "/uv.lock",
+    "/.pre-commit-config.yaml",
+    "/.gitleaks.toml",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tools", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "A", "ARG", "B", "BLE", "C4", "D", "DTZ", "E", "EM", "ERA", "F", "FBT", "FURB", "G", "I",
+    "ICN", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "Q", "RET", "RSE", "RUF",
+    "S", "SIM", "SLF", "T10", "T20", "TC", "TID", "TRY", "UP", "W",
+]
+ignore = [
+    "ISC001",  # conflicts with the formatter
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "S101", "S603", "S607", "PLR0913", "PLR0917", "PLR2004", "SLF001", "FBT"]
+"tools/**" = ["T201", "S603", "S607"]
+".claude/hooks/**" = ["S603"]
+"docs/conf.py" = ["A001"]
+
+[tool.ruff.format]
+line-ending = "lf"
+docstring-code-format = true
+
+[tool.mypy]
+strict = true
+files = ["src", "tools", "tests", ".claude/hooks"]
+mypy_path = ["src", "tools"]
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool", "possibly-undefined"]
+
+[[tool.mypy.overrides]]
+module = ["pytest_socket"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+pythonpath = ["tools"]
+addopts = [
+    "-ra",
+    "--strict-config",
+    "--strict-markers",
+    "--import-mode=importlib",
+    "--disable-socket",
+    "--allow-unix-socket",
+]
+filterwarnings = ["error"]
+xfail_strict = true
+
+[tool.coverage.run]
+branch = true
+source_pkgs = ["icecrown"]
+relative_files = true
+parallel = true
+
+[tool.coverage.paths]
+icecrown = ["src/icecrown", "*/site-packages/icecrown"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "@overload",
+    "raise NotImplementedError",
+]

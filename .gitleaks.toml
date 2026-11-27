@@ -1,0 +1,12 @@
+# Secret scanning for commits and CI. The default rule set applies; the allowlist covers files that
+# hold hashes by design.
+title = "Project Icecrown"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Package hashes in the lockfile are not secrets"
+paths = [
+  '''^uv\.lock$''',
+]

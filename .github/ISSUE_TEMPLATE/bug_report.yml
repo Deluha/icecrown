@@ -1,0 +1,36 @@
+name: Bug report
+description: Something does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Thanks for the report. Please never paste real data, connection strings or secrets; a small
+        synthetic table that shows the problem is best. Security issues go through SECURITY.md, not here.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The smallest code or commands that show it, with their output.
+      render: python
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Icecrown version
+      placeholder: "python -c 'import icecrown; print(icecrown.__version__)'"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Python version, operating system, pyarrow version
+    validations:
+      required: true

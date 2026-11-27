@@ -1,0 +1,9 @@
+# Text files are stored and checked out with LF line endings on every platform.
+* text=auto eol=lf
+
+# Binary files are never converted.
+*.parquet binary
+*.arrow binary
+*.feather binary
+*.png binary
+*.ico binary
