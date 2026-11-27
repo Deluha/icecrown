@@ -65,7 +65,7 @@ Every CPython version that is not end-of-life, from 3.11: today 3.11–3.15.
 | Tests | 3.15 | `ubuntu-24.04-arm` |
 | Lowest bounds (`--resolution lowest-direct`) | 3.11 | `ubuntu-24.04` |
 | Pre-release dependencies (non-blocking) | 3.15 | `ubuntu-24.04` |
-| Next Python (`3.16-dev`, non-blocking) | 3.16 | `ubuntu-24.04` |
+| Next Python (`3.16-dev`, non-blocking; skipped with a notice until every locked dependency has a wheel for it) | 3.16 | `ubuntu-24.04` |
 
 Runner labels are pinned, never `-latest`. A runner image retirement is a CI change (ask first).
 

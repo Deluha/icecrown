@@ -110,11 +110,32 @@ jobs:
           python-version: "3.16-dev"
           allow-prereleases: true
       - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
+      # Until every locked dependency ships a wheel for the pre-release interpreter, building one
+      # from source fails for reasons that say nothing about Icecrown; skip the job with a notice.
+      - name: Check that every locked dependency has a wheel for this interpreter
+        id: wheels
+        env:
+          PYTHON: ${{ steps.python.outputs.python-path }}
+          PROBE: ${{ runner.temp }}/wheel-probe
+        run: |
+          mkdir -p "$PROBE"
+          uv export --frozen --no-hashes --no-default-groups --group test --no-emit-project \
+            > "$PROBE/requirements.txt"
+          uv venv --quiet "$PROBE/venv" --python "$PYTHON"
+          if uv pip install --dry-run --quiet --only-binary :all: --python "$PROBE/venv" \
+              -r "$PROBE/requirements.txt"; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=next Python skipped::A locked dependency has no wheel for this interpreter yet (see the log above); the tests run once every dependency ships one."
+          fi
       - name: Install the locked environment on the pre-release interpreter
+        if: steps.wheels.outputs.ready == 'true'
         run: uv sync --frozen --no-default-groups --group test --python "$PYTHON"
         env:
           PYTHON: ${{ steps.python.outputs.python-path }}
       - name: Run the tests
+        if: steps.wheels.outputs.ready == 'true'
         run: uv run --frozen --no-sync pytest
 
   coverage:
